@@ -30,6 +30,8 @@ pub fn AQHostCall(msg: HostOutputMsg, shareSpace: &ShareSpace) {
             panic!("AQHostCall Process get Qcall msg...");
         }
         HostOutputMsg::WaitFD(msg) => {
+            //error!("AQHostCall WaitFD ...");
+            //defer!(error!("AQHostCall WaitFD ... 1"));
             let ret = super::VMSpace::WaitFD(msg.fd, msg.mask);
             if ret < 0 {
                 if ret != -9 {
@@ -41,15 +43,21 @@ pub fn AQHostCall(msg: HostOutputMsg, shareSpace: &ShareSpace) {
             }
         }
         HostOutputMsg::Close(msg) => {
+            //error!("AQHostCall Close ...");
+            //defer!(error!("AQHostCall Close ... 1"));
             super::VMSpace::Close(0, msg.fd);
         }
         HostOutputMsg::MUnmap(msg) => {
+            //error!("AQHostCall MUnmap ...");
+            //defer!(error!("AQHostCall MUnmap ... 1"));
             match super::PMA_KEEPER.Unmap(&Range::New(msg.addr, msg.len)) {
                 Ok(()) => (),
                 Err(err) => panic!("MUnmap: unexpected error {:?}", err),
             }
         }
         HostOutputMsg::IOBufWrite(msg) => {
+            //error!("AQHostCall IOBufWrite ...");
+            //defer!(error!("AQHostCall IOBufWrite ... 1"));
             let _ret = VMSpace::IOBufWrite(msg.fd, msg.addr, msg.len, msg.offset);
             //error!("HostOutputMsg::IOBufWrite ret is {}", ret);
             /*shareSpace.AQHostInputCall(HostInputMsg::IOBufWriteResp(IOBufWriteResp{
@@ -69,6 +77,8 @@ pub fn AQHostCall(msg: HostOutputMsg, shareSpace: &ShareSpace) {
             }));
         }
         HostOutputMsg::WakeVCPU(msg) => {
+            //error!("AQHostCall WakeVCPU ...");
+            //defer!(error!("AQHostCall WakeVCPU ... 1"));
             let vcpuId = msg.vcpuId as usize;
             SyncMgr::WakeVcpu(vcpuId);
         }

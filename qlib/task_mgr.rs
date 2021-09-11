@@ -89,6 +89,10 @@ pub struct Scheduler {
 }
 
 impl Scheduler {
+    pub fn PrintVcpus(&self) {
+        error!("vcpus is {:x?}", self.VcpuArr);
+    }
+
     pub fn DecreaseHaltVcpuCnt(&self) {
         self.haltVcpuCnt.fetch_sub(1, Ordering::SeqCst);
     }

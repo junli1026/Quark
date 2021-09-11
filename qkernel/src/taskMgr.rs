@@ -265,6 +265,7 @@ impl Scheduler {
                 Some(taskId) => {
                     self.readyTaskCnt.fetch_sub(1, Ordering::SeqCst);
 
+                    super::asm::mfence();
                     if taskId.GetTask().context.ready != 0 || taskId.data == Task::Current().taskId {
                         //the task is in the queue, but the context has not been setup
                         if currentCpuId != vcpuId { //stealing

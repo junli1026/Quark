@@ -870,3 +870,8 @@ pub fn fxrstor(addr: u64) {
         : "memory" : "intel", "volatile")
     };
 }
+
+#[inline]
+pub fn mfence() {
+    unsafe { llvm_asm!("mfence" : : : "memory" : "volatile" ) }
+}

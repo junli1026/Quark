@@ -323,7 +323,7 @@ impl VirtualMachine {
             while shareSpace.ReadyOutputMsgCnt() > 0 {
                 unsafe {
                     let msg = shareSpace.AQHostOutputPop();
-
+                    llvm_asm!("mfence" :::: "volatile");
                     match msg {
                         None => {
                             llvm_asm!("pause" :::: "volatile");
@@ -334,7 +334,7 @@ impl VirtualMachine {
                             let event = &mut (*eventAddr);
                             let currTaskId = event.taskId;
 
-                            //error!("qcall event is {:x?}", &event);
+                            error!("qcall event is {:x?}", &event);
 
                             match qcall::qCall(addr, event) {
                                 qcall::QcallRet::Normal => {
@@ -352,6 +352,7 @@ impl VirtualMachine {
                             qcall::AQHostCall(msg, shareSpace);
                         }
                     }
+                    llvm_asm!("mfence" :::: "volatile");
                 }
             }
 

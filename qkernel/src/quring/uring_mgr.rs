@@ -375,6 +375,8 @@ impl QUring {
                 error!("AUCall submission full...");
             }
 
+            super::super::asm::mfence();
+            defer!(super::super::asm::mfence());
             entry = match self.AUringCall(entry) {
                 None => return id,
                 Some(e) => e
@@ -397,7 +399,9 @@ impl QUring {
             }
         };
 
+        super::super::asm::mfence();
         self.Process(&cqe);
+        super::super::asm::mfence();
         return true;
     }
 
@@ -413,7 +417,10 @@ impl QUring {
                 None => return count,
                 Some(cqe) => {
                     count += 1;
+                    super::super::asm::mfence();
                     self.Process(&cqe);
+                    super::super::asm::mfence();
+
                 }
             }
         }

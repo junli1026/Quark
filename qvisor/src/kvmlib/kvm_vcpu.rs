@@ -667,6 +667,7 @@ impl KVMVcpu {
                     let vcpu_sregs = self.vcpu.get_sregs().map_err(|e| Error::IOError(format!("vcpu::error is {:?}", e)))?;
                     let regs = self.vcpu.get_regs().map_err(|e| Error::IOError(format!("vcpu::error is {:?}", e)))?;
 
+                    self.shareSpace.scheduler.PrintVcpus();
                     error!("Panic: CPU[{}] Unexpected exit reason: {:?}, regs is {:#x?}, sregs is {:#x?}",
                         self.id, r, regs, vcpu_sregs);
                     unsafe {
