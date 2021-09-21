@@ -20,8 +20,6 @@ use core::marker::PhantomData;
 use core::hint::spin_loop;
 use spin::*;
 
-use super::task::*;
-
 pub struct Spin;
 pub struct QMutex<T: ?Sized, R = Spin> {
     phantom: PhantomData<R>,
@@ -57,7 +55,7 @@ impl<T: ?Sized> QMutex<T> {
     pub fn lock(&self) -> QMutexGuard<T> {
         // Can fail to lock even if the spinlock is not locked. May be more efficient than `try_lock`
         // when called in a loop.
-        let id = Task::Current().taskId;
+        let id = Self::GetID();
 
         let val = self.lock.compare_and_swap(0, id, Ordering::Acquire);
         if val == 0{
@@ -67,7 +65,7 @@ impl<T: ?Sized> QMutex<T> {
             }
         }
 
-        debug!("QMutex lock by {:x}", val);
+        //debug!("QMutex lock by {:x}", val);
 
         loop  {
             let val = self.lock.compare_and_swap(0, id, Ordering::Acquire);
@@ -93,7 +91,7 @@ impl<T: ?Sized> QMutex<T> {
 
     #[inline(always)]
     pub fn try_lock(&self) -> Option<QMutexGuard<T>> {
-        let id = Task::Current().taskId;
+        let id = Self::GetID();
 
         let val = self.lock.compare_and_swap(0, id, Ordering::Acquire);
         if val == 0 {

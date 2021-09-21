@@ -36,7 +36,7 @@ use super::super::qlib::auxv::*;
 use super::super::task::*;
 use super::super::qlib::pagetable::*;
 use super::super::qlib::limits::*;
-use super::super::mutex::*;
+use super::super::qlib::mutex::*;
 //use super::super::qlib::perf_tunning::*;
 use super::super::kernel::aio::aio_context::*;
 use super::super::fs::dirent::*;

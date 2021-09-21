@@ -17,6 +17,7 @@ use core::sync::atomic::Ordering;
 use qlib::*;
 use super::qlib::common::*;
 use super::qlib::qmsg;
+use super::qlib::mutex::*;
 use super::qlib::config::*;
 use super::qlib::qmsg::*;
 use super::qlib::task_mgr::*;
@@ -1046,5 +1047,11 @@ impl<'a> ShareSpace {
 impl ShareSpace {
     pub fn Yield() {
         HostSpace::VcpuYield();
+    }
+}
+
+impl <T: ?Sized> QMutex<T> {
+    pub fn GetID() -> u64 {
+        return Task::Current().taskId;
     }
 }

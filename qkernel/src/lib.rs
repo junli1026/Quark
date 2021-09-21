@@ -98,7 +98,6 @@ pub mod perflog;
 pub mod seqcount;
 pub mod quring;
 pub mod stack;
-pub mod mutex;
 pub mod backtracer;
 
 use core::panic::PanicInfo;

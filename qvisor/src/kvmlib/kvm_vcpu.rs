@@ -29,6 +29,7 @@ use super::qlib::common::*;
 use super::qlib::task_mgr::*;
 use super::qlib::linux_def::*;
 use super::qlib::perf_tunning::*;
+use super::qlib::mutex::*;
 use super::qlib::*;
 use super::qlib::vcpu_mgr::*;
 use super::amd64_def::*;
@@ -758,5 +759,11 @@ impl ShareSpace {
 
     pub fn Yield() {
         std::thread::yield_now();
+    }
+}
+
+impl <T: ?Sized> QMutex<T> {
+    pub fn GetID() -> u64 {
+        return 0xffff;
     }
 }
