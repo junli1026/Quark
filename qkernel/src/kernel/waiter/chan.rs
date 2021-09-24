@@ -13,11 +13,12 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::queue::*;
 use super::*;
 use super::super::super::task::*;
@@ -33,12 +34,12 @@ pub struct ChanInternel<T: Sized> {
 }
 
 #[derive(Clone)]
-pub struct Chan<T>(Arc<Mutex<ChanInternel<T>>>);
+pub struct Chan<T>(Arc<QMutex<ChanInternel<T>>>);
 
 impl <T> Deref for Chan<T> {
-    type Target = Arc<Mutex<ChanInternel<T>>>;
+    type Target = Arc<QMutex<ChanInternel<T>>>;
 
-    fn deref(&self) -> &Arc<Mutex<ChanInternel<T>>> {
+    fn deref(&self) -> &Arc<QMutex<ChanInternel<T>>> {
         &self.0
     }
 }
@@ -52,7 +53,7 @@ impl <T> Chan <T> {
             closed: false,
         };
 
-        return Self(Arc::new(Mutex::new(internel)))
+        return Self(Arc::new(QMutex::new(internel)))
     }
 
     pub fn Write(&self, task: &Task, data: T) -> Result<()> {

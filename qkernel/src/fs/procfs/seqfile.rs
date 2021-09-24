@@ -15,7 +15,7 @@
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use spin::RwLock;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -39,6 +39,7 @@ use super::super::super::kernel::waiter::qlock::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::id_mgr::*;
 
 #[derive(Clone, Copy)]
@@ -86,7 +87,7 @@ pub struct SeqFileInternal {
     pub fsType: u64,
     pub unstable: UnstableAttr,
 
-    pub seqSource: Arc<Mutex<SeqSource>>,
+    pub seqSource: Arc<QMutex<SeqSource>>,
 
     pub source: Vec<SeqData>,
     pub generation: i64,
@@ -144,7 +145,7 @@ impl Deref for SeqFile {
 }
 
 impl SeqFile {
-    pub fn New(task: &Task, source: Arc<Mutex<SeqSource>>) -> Self {
+    pub fn New(task: &Task, source: Arc<QMutex<SeqSource>>) -> Self {
         let unstable = WithCurrentTime(task, &UnstableAttr {
             Owner: ROOT_OWNER,
             Perms: FilePermissions::FromMode(FileMode(0o444)),
@@ -238,7 +239,7 @@ impl InodeOperations for SeqFile {
         let internal = FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((flags, None)),
+            flags: QMutex::new((flags, None)),
             offset: QLock::New(0),
             FileOp: fops,
         };

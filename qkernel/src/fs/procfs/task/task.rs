@@ -14,12 +14,13 @@
 
 use alloc::sync::Arc;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 
 use super::super::super::super::qlib::common::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::auth::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::super::task::*;
 use super::super::super::attr::*;
 use super::super::super::file::*;
@@ -63,7 +64,7 @@ impl DirDataNode for TaskDirNode {
 }
 
 impl ProcNode {
-    pub fn NewTaskDir(&self, task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>, showSubtasks: bool) -> Inode {
+    pub fn NewTaskDir(&self, task: &Task, thread: &Thread, msrc: &Arc<QMutex<MountSource>>, showSubtasks: bool) -> Inode {
         let mut contents = BTreeMap::new();
         contents.insert("auxv".to_string(), NewAUXVec(task, thread, msrc));
         contents.insert("cmdline".to_string(), NewExecArg(task, thread, msrc, ExecArgType::CmdlineExecArg));

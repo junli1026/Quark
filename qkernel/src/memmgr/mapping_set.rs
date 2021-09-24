@@ -14,7 +14,7 @@
 
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_set::BTreeSet;
 use core::cmp::Ordering;
 use core::ops::Deref;
@@ -23,6 +23,7 @@ use super::super::qlib::mem::areaset::*;
 use super::super::memmgr::mm::*;
 use super::super::qlib::addr::*;
 use super::super::qlib::range::*;
+use super::super::qlib::mutex::*;
 use super::super::task::*;
 
 // MappingOfRange represents a mapping of a MappableRange.
@@ -76,19 +77,19 @@ impl MappingOfRange {
 }
 
 #[derive(Clone, Default)]
-pub struct MappingsOfRange(pub Arc<Mutex<BTreeSet<MappingOfRange>>>);
+pub struct MappingsOfRange(pub Arc<QMutex<BTreeSet<MappingOfRange>>>);
 
 impl Deref for MappingsOfRange {
-    type Target = Arc<Mutex<BTreeSet<MappingOfRange>>>;
+    type Target = Arc<QMutex<BTreeSet<MappingOfRange>>>;
 
-    fn deref(&self) -> &Arc<Mutex<BTreeSet<MappingOfRange>>> {
+    fn deref(&self) -> &Arc<QMutex<BTreeSet<MappingOfRange>>> {
         &self.0
     }
 }
 
 impl MappingsOfRange {
     pub fn New() -> Self {
-        return Self(Arc::new(Mutex::new(BTreeSet::new())));
+        return Self(Arc::new(QMutex::new(BTreeSet::new())));
     }
 }
 

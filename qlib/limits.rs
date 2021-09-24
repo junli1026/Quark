@@ -14,7 +14,7 @@
 
 use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::u64;
 use lazy_static::lazy_static;
@@ -22,6 +22,7 @@ use lazy_static::lazy_static;
 use super::common::*;
 use super::linux_def::*;
 use super::linux::limits::*;
+use super::mutex::*;
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, Ord, PartialOrd, Eq, PartialEq)]
 #[repr(i32)]
@@ -117,19 +118,19 @@ pub struct LimitSetInternal {
 }
 
 #[derive(Clone)]
-pub struct LimitSet(pub Arc<Mutex<LimitSetInternal>>);
+pub struct LimitSet(pub Arc<QMutex<LimitSetInternal>>);
 
 impl Deref for LimitSet {
-    type Target = Arc<Mutex<LimitSetInternal>>;
+    type Target = Arc<QMutex<LimitSetInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<LimitSetInternal>> {
+    fn deref(&self) -> &Arc<QMutex<LimitSetInternal>> {
         &self.0
     }
 }
 
 impl Default for LimitSet {
     fn default() -> Self {
-        return Self(Arc::new(Mutex::new(LimitSetInternal {
+        return Self(Arc::new(QMutex::new(LimitSetInternal {
             data: BTreeMap::new()
         })))
     }
@@ -143,7 +144,7 @@ impl LimitSet {
             data.insert(*k, *v);
         }
 
-        return Self(Arc::new(Mutex::new(LimitSetInternal {
+        return Self(Arc::new(QMutex::new(LimitSetInternal {
             data: data
         })))
     }

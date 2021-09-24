@@ -16,16 +16,17 @@ use lazy_static::lazy_static;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::ToString;
 
 use super::common::*;
+use super::mutex::*;
 
 lazy_static! {
-    pub static ref EMITTERS: Mutex<Emitters> = Mutex::new(Emitters(BTreeMap::new()));
+    pub static ref EMITTERS: QMutex<Emitters> = QMutex::new(Emitters(BTreeMap::new()));
 }
 
-pub struct Emitters(BTreeMap<u64, Arc<Mutex<Emitter>>>);
+pub struct Emitters(BTreeMap<u64, Arc<QMutex<Emitter>>>);
 
 #[derive(Clone, Debug)]
 pub struct UncaughtSignal {
@@ -73,7 +74,7 @@ pub fn Emit(event: &Event) -> Result<()> {
     return Err(Error::Common(errMsg))
 }
 
-pub fn AddEmiiter(e: &Arc<Mutex<Emitter>>) {
+pub fn AddEmiiter(e: &Arc<QMutex<Emitter>>) {
     let id = e.lock().Uid();
     EMITTERS.lock().0.insert(id, e.clone());
 }

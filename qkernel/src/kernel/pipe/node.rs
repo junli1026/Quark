@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -29,6 +29,7 @@ use super::super::super::fs::file::*;
 use super::super::super::fs::host::hostinodeop::*;
 use super::super::super::fs::dirent::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::task::*;
@@ -56,15 +57,15 @@ pub fn NewPipeInodeOps(task: &Task, perms: &FilePermissions, p: Pipe) -> PipeIop
         unstable: unstable,
     };
 
-    return PipeIops(Arc::new(Mutex::new(internal)))
+    return PipeIops(Arc::new(QMutex::new(internal)))
 }
 
-pub struct PipeIops(Arc<Mutex<PipeIopsInternal>>);
+pub struct PipeIops(Arc<QMutex<PipeIopsInternal>>);
 
 impl Deref for PipeIops {
-    type Target = Arc<Mutex<PipeIopsInternal>>;
+    type Target = Arc<QMutex<PipeIopsInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<PipeIopsInternal>> {
+    fn deref(&self) -> &Arc<QMutex<PipeIopsInternal>> {
         &self.0
     }
 }

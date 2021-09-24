@@ -15,10 +15,12 @@
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 use core::fmt;
-use core::sync::atomic::{AtomicU64, Ordering};
+use core::sync::atomic::{AtomicU64};
 use core::marker::PhantomData;
 use core::hint::spin_loop;
 use spin::*;
+
+use super::linux_def::QOrdering;
 
 pub struct Spin;
 pub struct QMutex<T: ?Sized, R = Spin> {
@@ -57,18 +59,26 @@ impl<T: ?Sized> QMutex<T> {
         // when called in a loop.
         let id = Self::GetID();
 
-        let val = self.lock.compare_and_swap(0, id, Ordering::Acquire);
-        if val == 0{
-            return QMutexGuard {
-                lock: &self.lock,
-                data: unsafe { &mut *self.data.get() },
+        let mut val;
+        for _ in 0..100 {
+            super::super::asm::mfence();
+            val = self.lock.compare_and_swap(0, id, QOrdering::ACQUIRE);
+            if val == 0 {
+                return QMutexGuard {
+                    lock: &self.lock,
+                    data: unsafe { &mut *self.data.get() },
+                }
             }
+
+            spin_loop();
         }
 
-        //debug!("QMutex lock by {:x}", val);
+
+        //self.Log(0x123, val);
 
         loop  {
-            let val = self.lock.compare_and_swap(0, id, Ordering::Acquire);
+            super::super::asm::mfence();
+            let val = self.lock.compare_and_swap(0, id, QOrdering::ACQUIRE);
             if val == 0 {
                 break;
             }
@@ -86,14 +96,15 @@ impl<T: ?Sized> QMutex<T> {
 
     #[inline(always)]
     pub fn is_locked(&self) -> bool {
-        self.lock.load(Ordering::Relaxed) != 0
+        self.lock.load(QOrdering::RELAXED) != 0
     }
 
     #[inline(always)]
     pub fn try_lock(&self) -> Option<QMutexGuard<T>> {
         let id = Self::GetID();
 
-        let val = self.lock.compare_and_swap(0, id, Ordering::Acquire);
+        super::super::asm::mfence();
+        let val = self.lock.compare_and_swap(0, id, QOrdering::ACQUIRE);
         if val == 0 {
             Some(QMutexGuard {
                 lock: &self.lock,
@@ -101,6 +112,17 @@ impl<T: ?Sized> QMutex<T> {
             })
         } else {
             None
+        }
+    }
+}
+
+impl<T: ?Sized + fmt::Debug> fmt::Debug for QMutex<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.try_lock() {
+            Some(guard) => write!(f, "QMutex {{ data: ")
+                .and_then(|()| (&*guard).fmt(f))
+                .and_then(|()| write!(f, "}}")),
+            None => write!(f, "QMutex {{ <locked> }}"),
         }
     }
 }
@@ -145,7 +167,8 @@ impl<'a, T: ?Sized> DerefMut for QMutexGuard<'a, T> {
 impl<'a, T: ?Sized> Drop for QMutexGuard<'a, T> {
     /// The dropping of the MutexGuard will release the lock it was created from.
     fn drop(&mut self) {
-        self.lock.store(0, Ordering::Release);
+        self.lock.store(0, QOrdering::RELEASE);
+        super::super::asm::mfence();
     }
 }
 

@@ -13,13 +13,14 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::ToString;
 use alloc::vec::Vec;
 
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::fsutil::file::readonly_file::*;
 use super::super::fsutil::inode::simple_file_inode::*;
@@ -32,7 +33,7 @@ use super::super::inode::*;
 use super::super::filesystems::*;
 use super::inode::*;
 
-pub fn NewFileSystem(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewFileSystem(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let v = NewFileSystemSimpleFileInode(task, &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o400)), FSMagic::PROC_SUPER_MAGIC);
     return NewProcInode(&Arc::new(v), msrc, InodeType::SpecialFile, None)
 

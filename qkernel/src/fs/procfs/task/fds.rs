@@ -15,13 +15,14 @@
 use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 
 use super::super::super::super::qlib::auth::*;
 use super::super::super::super::qlib::common::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::device::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::super::kernel::fd_table::*;
 use super::super::super::super::task::*;
 use super::super::super::ramfs::dir::*;
@@ -39,7 +40,7 @@ use super::super::symlink_proc::*;
 use super::super::inode::*;
 use super::super::dir_proc::*;
 
-pub fn NewFd(task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>, f: &File) -> Inode {
+pub fn NewFd(task: &Task, thread: &Thread, msrc: &Arc<QMutex<MountSource>>, f: &File) -> Inode {
     let node = FdNode {
         file: f.Downgrade(),
     };
@@ -96,7 +97,7 @@ fn WalkDescriptors(task: &Task, p: &str, toInode: &mut FnMut(&File, &FDFlags) ->
     return Ok(toInode(&file, &fdFlags))
 }
 
-fn WalkDescriptors2(task: &Task, p: &str, msrc: &Arc<Mutex<MountSource>>) -> Result<Inode> {
+fn WalkDescriptors2(task: &Task, p: &str, msrc: &Arc<QMutex<MountSource>>) -> Result<Inode> {
     let n : i32 = match p.parse() {
         Err(_) => return Err(Error::SysError(SysErr::ENOENT)),
         Ok(n) => n,
@@ -247,7 +248,7 @@ impl DirDataNode for FdInfoDirNode {
     }
 }
 
-pub fn NewFdDir(task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewFdDir(task: &Task, thread: &Thread, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let contents = BTreeMap::new();
     let f = DirNode {
         dir: Dir::New(task, contents, &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o0555))),
@@ -259,7 +260,7 @@ pub fn NewFdDir(task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>) ->
     return NewProcInode(&Arc::new(f), msrc, InodeType::SpecialDirectory, Some(thread.clone()))
 }
 
-pub fn NewFdInfoDir(task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewFdInfoDir(task: &Task, thread: &Thread, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let contents = BTreeMap::new();
     let f = DirNode {
         dir: Dir::New(task, contents, &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o0555))),

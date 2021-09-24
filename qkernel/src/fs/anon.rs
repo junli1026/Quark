@@ -13,10 +13,11 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::task::*;
 use super::super::qlib::auth::*;
+use super::super::qlib::mutex::*;
 use super::super::qlib::device::*;
 use super::super::qlib::linux_def::*;
 use super::fsutil::inode::simple_file_inode::*;
@@ -57,6 +58,6 @@ pub fn NewAnonInode(task: &Task) -> Inode {
     };
 
     return Inode::New(&Arc::new(iops),
-                      &Arc::new(Mutex::new(MountSource::NewPseudoMountSource())),
+                      &Arc::new(QMutex::new(MountSource::NewPseudoMountSource())),
                       &sattr);
 }

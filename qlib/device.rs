@@ -16,19 +16,21 @@ use alloc::string::String;
 use alloc::collections::btree_map::BTreeMap;
 use core::cmp::Ordering;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use lazy_static::lazy_static;
 
+use super::mutex::*;
+
 lazy_static! {
-    pub static ref SIMPLE_DEVICES: Mutex<Registry> = Mutex::new(Registry::New());
-    pub static ref HOSTFILE_DEVICE: Mutex<MultiDevice> = Mutex::new(NewAnonMultiDevice());
-    pub static ref PSEUDO_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref DEV_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref PTS_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref PROC_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref SHM_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref SYS_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref TMPFS_DEVICE: Arc<Mutex<Device>> = NewAnonDevice();
+    pub static ref SIMPLE_DEVICES: QMutex<Registry> = QMutex::new(Registry::New());
+    pub static ref HOSTFILE_DEVICE: QMutex<MultiDevice> = QMutex::new(NewAnonMultiDevice());
+    pub static ref PSEUDO_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref DEV_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref PTS_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref PROC_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref SHM_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref SYS_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref TMPFS_DEVICE: Arc<QMutex<Device>> = NewAnonDevice();
 }
 
 // TTYAUX_MAJOR is the major device number for alternate TTY devices.
@@ -63,7 +65,7 @@ impl Device {
 
 pub struct Registry {
     pub last: u32,
-    pub devices: BTreeMap<ID, Arc<Mutex<Device>>>
+    pub devices: BTreeMap<ID, Arc<QMutex<Device>>>
 }
 
 impl Registry {
@@ -82,8 +84,8 @@ impl Registry {
         }
     }
 
-    pub fn NewAnonDevice(&mut self) -> Arc<Mutex<Device>> {
-        let d = Arc::new(Mutex::new(Device {
+    pub fn NewAnonDevice(&mut self) -> Arc<QMutex<Device>> {
+        let d = Arc::new(QMutex::new(Device {
             id: self.newAnonID(),
             last: 0,
         }));
@@ -232,7 +234,7 @@ impl MultiDevice {
     }
 }
 
-pub fn NewAnonDevice() -> Arc<Mutex<Device>> {
+pub fn NewAnonDevice() -> Arc<QMutex<Device>> {
     return SIMPLE_DEVICES.lock().NewAnonDevice()
 }
 

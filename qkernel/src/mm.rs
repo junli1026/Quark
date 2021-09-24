@@ -13,8 +13,10 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
+
+use super::qlib::mutex::*;
 
 #[derive(Clone, Default, Debug, Copy)]
 pub struct ActivityInternal {
@@ -37,12 +39,12 @@ pub struct ActivityInternal {
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct Activity(Arc<Mutex<ActivityInternal>>);
+pub struct Activity(Arc<QMutex<ActivityInternal>>);
 
 impl Deref for Activity {
-    type Target = Arc<Mutex<ActivityInternal>>;
+    type Target = Arc<QMutex<ActivityInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<ActivityInternal>> {
+    fn deref(&self) -> &Arc<QMutex<ActivityInternal>> {
         &self.0
     }
 }
@@ -55,7 +57,7 @@ impl Activity {
             maxRSS: a.maxRSS,
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 }
 

@@ -13,13 +13,14 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::sync::atomic::AtomicI32;
 use core::sync::atomic::Ordering;
 
 //use super::super::super::threadmgr::thread::*;
 use super::super::super::threadmgr::task_block::*;
+use super::super::super::qlib::mutex::*;
 use super::queue::*;
 use super::entry::*;
 use super::*;
@@ -28,7 +29,7 @@ use super::*;
 pub struct WaitGroupInternal {
     pub cnt: AtomicI32,
     pub queue: Queue,
-    pub mutex: Mutex<()>,
+    pub mutex: QMutex<()>,
 }
 
 #[derive(Default, Clone)]
@@ -47,7 +48,7 @@ impl WaitGroup {
         let internal = WaitGroupInternal {
             cnt: AtomicI32::new(cnt),
             queue: Queue::default(),
-            mutex: Mutex::new(()),
+            mutex: QMutex::new(()),
         };
 
         return Self(Arc::new(internal))

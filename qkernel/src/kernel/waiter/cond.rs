@@ -13,10 +13,11 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::queue::*;
 use super::*;
@@ -28,12 +29,12 @@ pub struct CondInternal {
 }
 
 #[derive(Default, Clone)]
-pub struct Cond(Arc<Mutex<CondInternal>>);
+pub struct Cond(Arc<QMutex<CondInternal>>);
 
 impl Deref for Cond {
-    type Target = Arc<Mutex<CondInternal>>;
+    type Target = Arc<QMutex<CondInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<CondInternal>> {
+    fn deref(&self) -> &Arc<QMutex<CondInternal>> {
         &self.0
     }
 }

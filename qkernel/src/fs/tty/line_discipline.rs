@@ -13,11 +13,12 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::super::task::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 //use super::super::super::mem::seq::*;
 use super::super::host::tty::*;
 use super::queue::*;
@@ -36,8 +37,8 @@ pub const SPACES_PER_TAB: usize = 8;
 
 pub struct LineDiscipline {
     pub size: WindowSize,
-    pub inQueue: Arc<Mutex<Queue>>,
-    pub outQueue: Arc<Mutex<Queue>>,
+    pub inQueue: Arc<QMutex<Queue>>,
+    pub outQueue: Arc<QMutex<Queue>>,
     pub termios: KernelTermios,
     pub column: i32,
 }
@@ -46,8 +47,8 @@ impl LineDiscipline {
     pub fn New(termios: KernelTermios) -> Self {
         let ld = Self {
             size: WindowSize::default(),
-            inQueue: Arc::new(Mutex::new(Queue::NewInputQueue())),
-            outQueue: Arc::new(Mutex::new(Queue::NewOutputQueue())),
+            inQueue: Arc::new(QMutex::new(Queue::NewInputQueue())),
+            outQueue: Arc::new(QMutex::new(Queue::NewOutputQueue())),
             termios: termios,
             column: 0,
         };

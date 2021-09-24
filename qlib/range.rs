@@ -17,10 +17,11 @@ use core::ops::Bound::*;
 use alloc::vec::Vec;
 use core::cmp::*;
 use core::ops::Deref;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::addr::*;
 use super::common::{Error, Result};
+use super::mutex::*;
 
 pub const MAX_RANGE : u64 = core::u64::MAX;
 
@@ -56,7 +57,7 @@ impl PartialEq for Range {
 impl Eq for Range {}
 
 impl Range {
-    pub fn New(start: u64, len: u64) -> Self {
+    pub const fn New(start: u64, len: u64) -> Self {
         return Range { start, len }
     }
 
@@ -315,12 +316,12 @@ impl<T: core::clone::Clone> AreaMgr<T> {
 }
 
 #[derive(Debug, Default)]
-pub struct BufMgr (Mutex<BufMgrIntern>);
+pub struct BufMgr (QMutex<BufMgrIntern>);
 
 impl Deref for BufMgr {
-    type Target = Mutex<BufMgrIntern>;
+    type Target = QMutex<BufMgrIntern>;
 
-    fn deref(&self) -> &Mutex<BufMgrIntern> {
+    fn deref(&self) -> &QMutex<BufMgrIntern> {
         &self.0
     }
 }
@@ -332,7 +333,7 @@ impl BufMgr {
 
     pub fn New() -> Self {
         let intern = BufMgrIntern::New();
-        return Self(Mutex::new(intern))
+        return Self(QMutex::new(intern))
     }
 
     pub fn Alloc(&self, len: u64) -> Result<u64> {

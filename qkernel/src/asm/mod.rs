@@ -878,8 +878,7 @@ pub fn fxrstor(addr: u64) {
 #[inline(always)]
 pub fn mfence() {
     unsafe { llvm_asm!("
-        sfence
-        lfence
+        mfence
     " : : : "memory" : "volatile" ) }
 }
 

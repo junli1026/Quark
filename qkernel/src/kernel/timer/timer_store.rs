@@ -16,10 +16,11 @@ use alloc::collections::btree_map::BTreeMap;
 use alloc::collections::btree_set::BTreeSet;
 use core::cmp::Ordering;
 use core::ops::Deref;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::String;
 
 use super::super::super::IOURING;
+use super::super::super::qlib::mutex::*;
 use super::*;
 
 #[derive(Debug, Copy, Clone)]
@@ -68,12 +69,12 @@ impl PartialEq for TimerUnit {
 }
 
 #[derive(Default)]
-pub struct TimerStore(Mutex<TimerStoreIntern>);
+pub struct TimerStore(QMutex<TimerStoreIntern>);
 
 impl Deref for TimerStore {
-    type Target = Mutex<TimerStoreIntern>;
+    type Target = QMutex<TimerStoreIntern>;
 
-    fn deref(&self) -> &Mutex<TimerStoreIntern> {
+    fn deref(&self) -> &QMutex<TimerStoreIntern> {
         &self.0
     }
 }

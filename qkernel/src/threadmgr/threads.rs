@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use spin::RwLock;
 use spin::RwLockReadGuard;
 use spin::RwLockWriteGuard;
@@ -24,6 +24,7 @@ use alloc::string::ToString;
 
 use super::super::uid::NewUID;
 use super::super::qlib::auth::userns::*;
+use super::super::qlib::mutex::*;
 use super::super::qlib::usage::io::*;
 use super::super::kernel::time::*;
 use super::super::kernel::waiter::waitgroup::*;
@@ -227,7 +228,7 @@ impl TaskSet {
 
         let t = Thread {
             uid: NewUID(),
-            data: Arc::new(Mutex::new(internal))
+            data: Arc::new(QMutex::new(internal))
         };
 
         if fromContext {

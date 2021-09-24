@@ -16,12 +16,13 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 
 use super::super::task::*;
 use super::super::qlib::common::*;
 use super::super::qlib::auth::*;
+use super::super::qlib::mutex::*;
 use super::super::fs::dirent::*;
 use super::super::fs::host::fs::*;
 use super::super::fs::filesystems::*;
@@ -56,7 +57,7 @@ fn CreateRootMount(task: &Task, spec: &oci::Spec, config: &config::Config, mount
     let (fd, writeable, fstat) = TryOpenAt(-100, rootStr)?;
 
     let ms = MountSource::NewHostMountSource(&rootStr, &ROOT_OWNER, &WhitelistFileSystem::New(), &mf, false);
-    let hostRoot = Inode::NewHostInode(&Arc::new(Mutex::new(ms)), fd, &fstat, writeable)?;
+    let hostRoot = Inode::NewHostInode(&Arc::new(QMutex::new(ms)), fd, &fstat, writeable)?;
     let submounts = SubTargets(&"/".to_string(), mounts);
     //submounts.append(&mut vec!["/dev1".to_string(), "/sys".to_string(), "/proc".to_string(), "/tmp".to_string()]);
 
@@ -66,7 +67,7 @@ fn CreateRootMount(task: &Task, spec: &oci::Spec, config: &config::Config, mount
 }
 
 pub fn AddSubmountOverlay(task: &Task, inode: &Inode, submounts: &Vec<String>) -> Result<Inode> {
-    let msrc = Arc::new(Mutex::new(MountSource::NewPseudoMountSource()));
+    let msrc = Arc::new(QMutex::new(MountSource::NewPseudoMountSource()));
     let mountTree = MakeDirectoryTree(task, &msrc, submounts)?;
 
     let overlayInode = NewOverlayRoot(task, inode, &mountTree, &MountSourceFlags::default())?;
@@ -283,7 +284,7 @@ fn mountFlags(opts: &Vec<String>) -> MountSourceFlags {
     return mf
 }
 
-fn MustFindFilesystem(name: &str) -> Arc<Mutex<Filesystem>> {
+fn MustFindFilesystem(name: &str) -> Arc<QMutex<Filesystem>> {
     return FindFilesystem(name).expect(format!("could not find filesystem {}", name).as_str());
 }
 

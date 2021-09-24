@@ -15,9 +15,10 @@
 use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::ramfs::symlink::*;
 use super::super::dirent::*;
@@ -37,7 +38,7 @@ impl ReadLinkNode for MountsNode {
     }
 }
 
-pub fn NewMounts(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewMounts(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let node = MountsNode {};
 
     return SymlinkNode::New(task, msrc, node,  None)

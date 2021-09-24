@@ -17,7 +17,7 @@ use alloc::string::ToString;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::vec::Vec;
 use spin::RwLock;
-use spin::Mutex;
+//use spin::Mutex;
 use core::any::Any;
 use alloc::sync::Arc;
 use core::ops::Deref;
@@ -38,6 +38,7 @@ use super::super::super::kernel::waiter::qlock::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::id_mgr::*;
 use super::super::super::socket::unix::transport::unix::*;
 
@@ -333,7 +334,7 @@ impl InodeOperations for Dir {
         return Ok(())
     }
 
-    //fn RemoveDirent(&mut self, dir: &mut InodeStruStru, remove: &Arc<Mutex<Dirent>>) -> Result<()> ;
+    //fn RemoveDirent(&mut self, dir: &mut InodeStruStru, remove: &Arc<QMutex<Dirent>>) -> Result<()> ;
     fn Remove(&self, task: &Task, _dir: &mut Inode, name: &str) -> Result<()> {
         if name.len() > NAME_MAX {
             return Err(Error::SysError(SysErr::ENAMETOOLONG))
@@ -385,7 +386,7 @@ impl InodeOperations for Dir {
         let file = FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((flags, None)),
+            flags: QMutex::new((flags, None)),
             offset: QLock::New(0),
             FileOp: Arc::new(dirOps),
         };
@@ -481,14 +482,14 @@ impl InodeOperations for Dir {
 
 
 pub struct DirFileOperation {
-    pub dirCursor: Mutex<String>,
+    pub dirCursor: QMutex<String>,
     pub dir: Dir,
 }
 
 impl DirFileOperation {
     pub fn New(dir: &Dir) -> Self {
         return Self {
-            dirCursor: Mutex::new("".to_string()),
+            dirCursor: QMutex::new("".to_string()),
             dir: dir.clone(),
         }
     }

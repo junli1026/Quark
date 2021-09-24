@@ -16,15 +16,16 @@ use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
 use core::mem;
 use lazy_static::lazy_static;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::qlib::perf_tunning::*;
 use super::qlib::vcpu_mgr::*;
+use super::qlib::mutex::*;
 use super::uid::*;
 use super::task::*;
 
 lazy_static! {
-    pub static ref THREAD_COUNTS : Mutex<ThreadPerfCounters> = Mutex::new(ThreadPerfCounters::default());
+    pub static ref THREAD_COUNTS : QMutex<ThreadPerfCounters> = QMutex::new(ThreadPerfCounters::default());
 }
 
 #[repr(usize)]

@@ -14,11 +14,12 @@
 
 use alloc::sync::Arc;
 use core::any::Any;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::kernel::waiter::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::task::*;
 use super::super::super::threadmgr::processgroup::*;
@@ -408,12 +409,12 @@ impl TTYFileOpsInternal {
 }
 
 #[derive(Clone)]
-pub struct TTYFileOps(Arc<Mutex<TTYFileOpsInternal>>);
+pub struct TTYFileOps(Arc<QMutex<TTYFileOpsInternal>>);
 
 impl Deref for TTYFileOps {
-    type Target = Arc<Mutex<TTYFileOpsInternal>>;
+    type Target = Arc<QMutex<TTYFileOpsInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<TTYFileOpsInternal>> {
+    fn deref(&self) -> &Arc<QMutex<TTYFileOpsInternal>> {
         &self.0
     }
 }
@@ -427,7 +428,7 @@ impl TTYFileOps {
             fgProcessgroup: None,
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
 

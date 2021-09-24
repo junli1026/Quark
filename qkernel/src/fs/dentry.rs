@@ -18,11 +18,12 @@ use alloc::collections::btree_map::BTreeMap;
 use alloc::collections::btree_map::Range;
 use core::ops::Bound::*;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::sync::Arc;
 
 use super::super::qlib::device::*;
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::*;
 use super::super::task::*;
 use super::attr::*;
 
@@ -33,7 +34,7 @@ pub struct DentAttr {
 }
 
 impl DentAttr {
-    pub fn GenericDentAttr(nt: InodeType, device: &Arc<Mutex<Device>>) -> Self {
+    pub fn GenericDentAttr(nt: InodeType, device: &Arc<QMutex<Device>>) -> Self {
         return Self {
             Type: nt,
             InodeId: device.lock().NextIno()

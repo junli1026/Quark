@@ -18,8 +18,11 @@ use core::sync::atomic::Ordering;
 use core::cmp::max;
 use core::mem::size_of;
 use core::ptr::NonNull;
-use spin::Mutex;
+//use spin::Mutex;
 use buddy_system_allocator::Heap;
+
+use super::super::range::Range;
+use super::super::mutex::QMutex;
 
 pub const CLASS_CNT : usize = 16;
 pub const FREE_THRESHOLD: usize = 30; // when free size less than 30%, need to free buffer
@@ -28,48 +31,55 @@ pub const FREE_BATCH: usize = 10; // free 10 blocks each time.
 pub const ORDER : usize = 33;
 
 pub struct ListAllocator {
-    pub bufs: [Mutex<FreeMemBlockMgr>; CLASS_CNT],
-    pub heap: Mutex<Heap<ORDER>>,
+    pub bufs: [QMutex<FreeMemBlockMgr>; CLASS_CNT],
+    pub heap: QMutex<Heap<ORDER>>,
     pub total: AtomicUsize,
     pub free: AtomicUsize,
     pub bufSize: AtomicUsize,
+    pub range: QMutex<Range>,
     //pub errorHandler: Arc<OOMHandler>
     pub initialized: AtomicBool
 }
 
 pub trait OOMHandler {
-    fn handleError(&self, a:u64, b:u64) -> ();
+    fn handleError(&self, a:u64, b:u64);
+    fn log(&self, a: u64, b: u64);
 }
 
 impl ListAllocator {
     pub const fn Empty() -> Self {
-        let bufs : [Mutex<FreeMemBlockMgr>; CLASS_CNT] = [
-            Mutex::new(FreeMemBlockMgr::New(0, 0)),
-            Mutex::new(FreeMemBlockMgr::New(0, 1)),
-            Mutex::new(FreeMemBlockMgr::New(0, 2)),
-            Mutex::new(FreeMemBlockMgr::New(128, 3)),
-            Mutex::new(FreeMemBlockMgr::New(128, 4)),
-            Mutex::new(FreeMemBlockMgr::New(128, 5)),
-            Mutex::new(FreeMemBlockMgr::New(64, 6)),
-            Mutex::new(FreeMemBlockMgr::New(64, 7)),
-            Mutex::new(FreeMemBlockMgr::New(64, 8)),
-            Mutex::new(FreeMemBlockMgr::New(32, 9)),
-            Mutex::new(FreeMemBlockMgr::New(32, 10)),
-            Mutex::new(FreeMemBlockMgr::New(16, 11)),
-            Mutex::new(FreeMemBlockMgr::New(1024, 12)),
-            Mutex::new(FreeMemBlockMgr::New(16, 13)),
-            Mutex::new(FreeMemBlockMgr::New(8, 14)),
-            Mutex::new(FreeMemBlockMgr::New(8, 15))
+        let bufs : [QMutex<FreeMemBlockMgr>; CLASS_CNT] = [
+            QMutex::new(FreeMemBlockMgr::New(0, 0)),
+            QMutex::new(FreeMemBlockMgr::New(0, 1)),
+            QMutex::new(FreeMemBlockMgr::New(0, 2)),
+            QMutex::new(FreeMemBlockMgr::New(128, 3)),
+            QMutex::new(FreeMemBlockMgr::New(128, 4)),
+            QMutex::new(FreeMemBlockMgr::New(128, 5)),
+            QMutex::new(FreeMemBlockMgr::New(64, 6)),
+            QMutex::new(FreeMemBlockMgr::New(64, 7)),
+            QMutex::new(FreeMemBlockMgr::New(64, 8)),
+            QMutex::new(FreeMemBlockMgr::New(32, 9)),
+            QMutex::new(FreeMemBlockMgr::New(32, 10)),
+            QMutex::new(FreeMemBlockMgr::New(16, 11)),
+            QMutex::new(FreeMemBlockMgr::New(1024, 12)),
+            QMutex::new(FreeMemBlockMgr::New(16, 13)),
+            QMutex::new(FreeMemBlockMgr::New(8, 14)),
+            QMutex::new(FreeMemBlockMgr::New(8, 15))
         ];
 
         return Self {
             bufs: bufs,
-            heap: Mutex::new(Heap::empty()),
+            heap: QMutex::new(Heap::empty()),
             total: AtomicUsize::new(0),
             free: AtomicUsize::new(0),
             bufSize: AtomicUsize::new(0),
+            range: QMutex::new(Range::New(0, 0)),
             initialized: AtomicBool::new(false)
         }
+    }
+
+    pub fn PrintAddr(&self) {
+        error!("ListAllocator self {:x}, bufs {:x}", self as * const _ as u64, &self.bufs[0] as * const _ as u64);
     }
 
     pub fn AddToHead(&self, start: usize, end: usize) {
@@ -84,6 +94,8 @@ impl ListAllocator {
 
     /// add the chunk of memory (start, start+size) to heap for allocating dynamic memory
     pub fn Add(&self, start: usize, size: usize) {
+        *self.range.lock() = Range::New(start as u64, size as u64);
+
         let mut start = start;
         let end = start + size;
         let size = 1 << 30; // 1GB
@@ -182,6 +194,15 @@ unsafe impl GlobalAlloc for ListAllocator {
         );
         let class = size.trailing_zeros() as usize;
 
+        let addr = ptr as u64;
+        let range = self.range.lock().clone();
+        if !range.Contains(addr) || !range.Contains(addr + size as u64) {
+            self.log(range.Start(), range.End());
+            self.log(addr, size as u64);
+            return
+            //self.handleError(addr, size as u64);
+        }
+
         self.free.fetch_add(size, Ordering::Release);
         self.bufSize.fetch_add(size, Ordering::Release);
         if class < self.bufs.len() {
@@ -234,7 +255,7 @@ impl FreeMemBlockMgr {
         }
     }
 
-    pub fn Dealloc(&mut self, ptr: *mut u8, _heap: &Mutex<Heap<ORDER>>) {
+    pub fn Dealloc(&mut self, ptr: *mut u8, _heap: &QMutex<Heap<ORDER>>) {
         /*let size = self.size / 8;
         unsafe {
             let toArr = slice::from_raw_parts(ptr as *mut u64, size);
@@ -247,7 +268,7 @@ impl FreeMemBlockMgr {
         self.list.Push(ptr as u64);
     }
 
-    fn Free(&mut self, heap: &Mutex<Heap<ORDER>>) {
+    fn Free(&mut self, heap: &QMutex<Heap<ORDER>>) {
         assert!(self.count > 0);
         self.count -= 1;
         let addr = self.list.Pop();
@@ -257,7 +278,7 @@ impl FreeMemBlockMgr {
         }
     }
 
-    pub fn FreeMultiple(&mut self, heap: &Mutex<Heap<ORDER>>, count: usize) -> usize {
+    pub fn FreeMultiple(&mut self, heap: &QMutex<Heap<ORDER>>, count: usize) -> usize {
         for i in 0..count {
             if self.count <= self.reserve {
                 return i;

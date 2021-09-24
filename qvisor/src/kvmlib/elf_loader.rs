@@ -139,6 +139,8 @@ impl KernelELF {
                                 .ProtoRead()
                                 .ProtoWrite();
 
+                            info!("endmem {:x}, bssEnd {:x}", endMem.0, bssEnd.0);
+
                             let mr = option.Map()?;
                             assert!(mr.ptr == endMem.0);
                             self.mrs.push(mr);
@@ -150,6 +152,8 @@ impl KernelELF {
 
         self.startAddr = startAddr;
         self.endAddr = endAddr;
+
+        info!("kernel elf address {:x}->{:x}", startAddr.0, endAddr.0);
 
         return Ok(entry)
     }

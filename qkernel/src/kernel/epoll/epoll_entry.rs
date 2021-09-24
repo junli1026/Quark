@@ -13,10 +13,11 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::fs::file::*;
 use super::super::waiter::*;
 use super::epoll::*;
@@ -81,7 +82,7 @@ pub struct ReadyState {
 }
 
 #[derive(Clone)]
-pub struct PollEntry(pub Arc<Mutex<PollEntryInternal>>);
+pub struct PollEntry(pub Arc<QMutex<PollEntryInternal>>);
 
 impl PollEntry {
     pub fn CallBack(&self) {
@@ -124,9 +125,9 @@ impl PollEntry {
 }
 
 impl Deref for PollEntry {
-    type Target = Arc<Mutex<PollEntryInternal>>;
+    type Target = Arc<QMutex<PollEntryInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<PollEntryInternal>> {
+    fn deref(&self) -> &Arc<QMutex<PollEntryInternal>> {
         &self.0
     }
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use alloc::string::String;
@@ -23,6 +23,7 @@ use core::ops::Deref;
 
 use super::super::qlib::auth::cap_set::*;
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::*;
 use super::super::qlib::cpuid::*;
 use super::super::qlib::linux_def::*;
 use super::super::qlib::limits::*;
@@ -275,7 +276,7 @@ impl LoaderInternal {
         let ipcns = IPCNamespace::New(&userns);
 
         let kernalArgs = InitKernalArgs {
-            FeatureSet: Arc::new(Mutex::new(HostFeatureSet())),
+            FeatureSet: Arc::new(QMutex::new(HostFeatureSet())),
             RootUserNamespace: userns.clone(),
             ApplicationCores: process.NumCpu,
             ExtraAuxv: Vec::new(),
@@ -459,7 +460,7 @@ pub fn NewProcess(process: Process, creds: &Credentials, k: &Kernel) -> CreatePr
         WorkingDirectory: process.Cwd,
         Credentials: creds.clone(),
         Umask: 0o22,
-        Limits: LimitSet(Arc::new(Mutex::new(process.limitSet))),
+        Limits: LimitSet(Arc::new(QMutex::new(process.limitSet))),
         MaxSymlinkTraversals: MAX_SYMLINK_TRAVERSALS,
         UTSNamespace: utsns,
         IPCNamespace: ipcns,

@@ -13,13 +13,14 @@
 // limitations under the License.
 
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use lazy_static::lazy_static;
 
 use super::userns::*;
+use super::super::mutex::*;
 
 lazy_static! {
-    pub static ref HOST_AUTH_ID: Mutex<HostAuthID> = Mutex::new(HostAuthID::New());
+    pub static ref HOST_AUTH_ID: QMutex<HostAuthID> = QMutex::new(HostAuthID::New());
 }
 
 #[derive(Serialize, Deserialize, Debug, Copy, Clone)]

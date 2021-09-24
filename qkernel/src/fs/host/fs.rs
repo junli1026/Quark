@@ -14,7 +14,7 @@
 
 use alloc::string::String;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::string::ToString;
 use alloc::vec::Vec;
@@ -22,6 +22,7 @@ use alloc::vec::Vec;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::path::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::inode::*;
 use super::super::mount::*;
@@ -231,7 +232,7 @@ impl Filesystem for WhitelistFileSystem {
         if ret < 0 {
             return Err(Error::SysError(-ret as i32));
         }
-        let inode = Inode::NewHostInode(&Arc::new(Mutex::new(msrc)), fd, &fstat, writable)?;
+        let inode = Inode::NewHostInode(&Arc::new(QMutex::new(msrc)), fd, &fstat, writable)?;
 
         return Ok(inode)
     }

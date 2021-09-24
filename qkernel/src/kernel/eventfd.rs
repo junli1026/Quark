@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
 use core::slice;
@@ -21,6 +21,7 @@ use alloc::sync::Arc;
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
 use super::super::qlib::mem::seq::*;
+use super::super::qlib::mutex::*;
 use super::super::task::*;
 use super::super::kernel::waiter::*;
 
@@ -60,7 +61,7 @@ pub fn NewEventfd(task: &Task, initVal: u64, semMode: bool) -> File {
         semMode: semMode,
     };
 
-    let ops = EventOperations(Arc::new(Mutex::new(internal)));
+    let ops = EventOperations(Arc::new(QMutex::new(internal)));
 
     return File::New(&dirent, &FileFlags{
         Read: true,
@@ -70,12 +71,12 @@ pub fn NewEventfd(task: &Task, initVal: u64, semMode: bool) -> File {
 }
 
 #[derive(Clone)]
-pub struct EventOperations(Arc<Mutex<EventOperationsInternal>>);
+pub struct EventOperations(Arc<QMutex<EventOperationsInternal>>);
 
 impl Deref for EventOperations {
-    type Target = Arc<Mutex<EventOperationsInternal>>;
+    type Target = Arc<QMutex<EventOperationsInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<EventOperationsInternal>> {
+    fn deref(&self) -> &Arc<QMutex<EventOperationsInternal>> {
         &self.0
     }
 }

@@ -15,10 +15,11 @@
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::any::Any;
 
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::*;
 use super::super::task::*;
 use super::mount::*;
 use super::inode::*;
@@ -26,12 +27,12 @@ use super::dirent::*;
 use super::filesystems::*;
 
 pub struct OverlayMountSourceOperations {
-    pub upper: Arc<Mutex<MountSource>>,
-    pub lower: Arc<Mutex<MountSource>>,
+    pub upper: Arc<QMutex<MountSource>>,
+    pub lower: Arc<QMutex<MountSource>>,
 }
 
-pub fn NewOverlayMountSource(upper: &Arc<Mutex<MountSource>>, lower: &Arc<Mutex<MountSource>>, flags: &MountSourceFlags) -> Arc<Mutex<MountSource>> {
-    let mut msrc = MountSource::NewOverlayMountSource(&Arc::new(Mutex::new(OverlayMountSourceOperations {
+pub fn NewOverlayMountSource(upper: &Arc<QMutex<MountSource>>, lower: &Arc<QMutex<MountSource>>, flags: &MountSourceFlags) -> Arc<QMutex<MountSource>> {
+    let mut msrc = MountSource::NewOverlayMountSource(&Arc::new(QMutex::new(OverlayMountSourceOperations {
         upper: upper.clone(),
         lower: lower.clone(),
     })), &OverLayFileSystem {}, flags);
@@ -42,7 +43,7 @@ pub fn NewOverlayMountSource(upper: &Arc<Mutex<MountSource>>, lower: &Arc<Mutex<
     }
 
     msrc.fscache.SetMaxSize(size);
-    return Arc::new(Mutex::new(msrc))
+    return Arc::new(QMutex::new(msrc))
 }
 
 impl DirentOperations for OverlayMountSourceOperations {

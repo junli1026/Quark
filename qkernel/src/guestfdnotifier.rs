@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::collections::btree_map::BTreeMap;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use lazy_static::lazy_static;
 
@@ -22,6 +22,7 @@ use super::kernel::waiter::*;
 use super::fs::host::hostinodeop::*;
 use super::qlib::common::*;
 use super::qlib::linux_def::*;
+use super::qlib::mutex::*;
 
 lazy_static! {
     static ref GUEST_NOTIFIER : Notifier = Notifier::New();
@@ -71,12 +72,12 @@ pub struct NotifierInternal {
     fdMap: BTreeMap<i32, GuestFdInfo>,
 }
 
-pub struct Notifier(Mutex<NotifierInternal>);
+pub struct Notifier(QMutex<NotifierInternal>);
 
 impl Deref for Notifier {
-    type Target = Mutex<NotifierInternal>;
+    type Target = QMutex<NotifierInternal>;
 
-    fn deref(&self) -> &Mutex<NotifierInternal> {
+    fn deref(&self) -> &QMutex<NotifierInternal> {
         &self.0
     }
 }
@@ -87,7 +88,7 @@ impl Notifier {
             fdMap: BTreeMap::new()
         };
 
-        return Self(Mutex::new(internal))
+        return Self(QMutex::new(internal))
     }
 
     fn waitfd(fd: i32, mask: EventMask) -> Result<()> {

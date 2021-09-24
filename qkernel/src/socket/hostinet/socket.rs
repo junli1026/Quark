@@ -21,7 +21,7 @@ use core::sync::atomic::AtomicBool;
 use core::sync::atomic::Ordering;
 use core::ptr;
 use core::ops::Deref;
-use spin::Mutex;
+//use spin::Mutex;
 
 use crate::socket::control::ControlMessage;
 
@@ -41,6 +41,7 @@ use super::super::super::kernel::time::*;
 use super::super::super::qlib::common::*;
 use super::super::super::task::*;
 use super::super::super::qlib::mem::block::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux::netdevice::*;
 use super::super::super::Kernel;
 use super::super::super::IOURING;
@@ -73,8 +74,8 @@ pub struct SocketOperationsIntern {
     pub stype: i32,
     pub fd: i32,
     pub queue: Queue,
-    pub remoteAddr: Mutex<Option<SockAddr>>,
-    pub socketBuf: Mutex<Option<Arc<SocketBuff>>>,
+    pub remoteAddr: QMutex<Option<SockAddr>>,
+    pub socketBuf: QMutex<Option<Arc<SocketBuff>>>,
     pub enableSocketBuf: AtomicBool,
     passInq: AtomicBool,
 }
@@ -104,8 +105,8 @@ impl SocketOperations {
             stype,
             fd,
             queue,
-            remoteAddr: Mutex::new(addr),
-            socketBuf: Mutex::new(None),
+            remoteAddr: QMutex::new(addr),
+            socketBuf: QMutex::new(None),
             enableSocketBuf: AtomicBool::new(false),
             passInq: AtomicBool::new(false)
         };

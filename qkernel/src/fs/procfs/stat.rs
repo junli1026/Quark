@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::vec::Vec;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -21,6 +21,7 @@ use alloc::string::ToString;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::kernel::kernel::*;
 use super::super::super::task::*;
 use super::super::fsutil::file::readonly_file::*;
@@ -84,7 +85,7 @@ impl CpuStats {
     }
 }
 
-pub fn NewStatData(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewStatData(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let v = NewStatDataSimpleFileInode(task, &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o400)), FSMagic::PROC_SUPER_MAGIC);
     return NewProcInode(&Arc::new(v), msrc, InodeType::SpecialFile, None)
 

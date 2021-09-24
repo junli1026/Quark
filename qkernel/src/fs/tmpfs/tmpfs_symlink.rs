@@ -15,7 +15,7 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::any::Any;
 
 use socket::unix::transport::unix::BoundEndpoint;
@@ -23,6 +23,7 @@ use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
 use super::super::super::qlib::device::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::kernel::time::*;
 use super::super::super::task::*;
 use super::super::attr::*;
@@ -35,7 +36,7 @@ use super::super::host::hostinodeop::*;
 use super::super::ramfs::symlink::*;
 use super::tmpfs_dir::*;
 
-pub fn NewTmpfsSymlink(task: &Task, target: &str, owner: &FileOwner, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewTmpfsSymlink(task: &Task, target: &str, owner: &FileOwner, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let s = Symlink::New(task, owner, target);
     let s = TmpfsSymlink(s);
 
@@ -100,7 +101,7 @@ impl InodeOperations for TmpfsSymlink {
         return self.0.CreateFifo(task, dir, name, perm)
     }
 
-    //fn RemoveDirent(&mut self, dir: &mut InodeStruStru, remove: &Arc<Mutex<Dirent>>) -> Result<()> ;
+    //fn RemoveDirent(&mut self, dir: &mut InodeStruStru, remove: &Arc<QMutex<Dirent>>) -> Result<()> ;
     fn Remove(&self, task: &Task, dir: &mut Inode, name: &str) -> Result<()> {
         return self.0.Remove(task, dir, name)
     }

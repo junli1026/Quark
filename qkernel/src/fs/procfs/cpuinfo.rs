@@ -14,15 +14,16 @@
 
 use alloc::sync::Arc;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::super::kernel::kernel::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::mount::*;
 use super::super::inode::*;
 use super::inode::*;
 
-pub fn NewCPUInfo(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewCPUInfo(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let kernel = GetKernel();
     let features = kernel.featureSet.clone();
 

@@ -13,11 +13,12 @@
 // limitations under the License.
 
 use lazy_static::lazy_static;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::vec::Vec;
 use core::{ptr};
 
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::*;
 use super::super::qlib::control_msg::*;
 use super::super::Kernel;
 use super::super::taskMgr;
@@ -27,7 +28,7 @@ use super::super::{LOADER, KERNEL_STACK_ALLOCATOR};
 use super::process::*;
 
 lazy_static! {
-    pub static ref MSG: Mutex<Option<ControlMsg>> = Mutex::new(None);
+    pub static ref MSG: QMutex<Option<ControlMsg>> = QMutex::new(None);
 }
 
 pub fn Run() -> Result<()> {

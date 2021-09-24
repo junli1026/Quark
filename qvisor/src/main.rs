@@ -59,15 +59,15 @@ pub mod kvmlib;
 
 use std::env;
 
-use kvmlib::qlib::mem::list_allocator::*;
+//use kvmlib::qlib::mem::list_allocator::*;
 
 pub const LOG_FILE : &'static str = "/var/log/quark/quark.log";
 
 fn main() {
     use self::kvmlib::runc::cmd::command::*;
 
-    #[global_allocator]
-    static GLOBAL: ListAllocator = ListAllocator::Empty();
+    //#[global_allocator]
+    //static GLOBAL: ListAllocator = ListAllocator::Empty();
 
     {
         let mut str = "".to_string();

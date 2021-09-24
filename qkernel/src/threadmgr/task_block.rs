@@ -76,7 +76,6 @@ impl Default for Blocker {
         let realClock = REALTIME_CLOCK.clone();
         let realTimer = Timer::New(&realClock, &Arc::new(listener.clone()));
 
-
         return Self {
             waiter: waiter,
             timerEntry: timerEntry,

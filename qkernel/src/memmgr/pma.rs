@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use core::ops::Deref;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use x86_64::structures::paging::{PageTable};
@@ -29,14 +29,15 @@ use super::super::qlib::range::*;
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
 use super::super::qlib::pagetable::*;
+use super::super::qlib::mutex::*;
 use super::pmamgr::*;
 
-pub struct PageMgr(Mutex<PageMgrInternal>);
+pub struct PageMgr(QMutex<PageMgrInternal>);
 
 impl Deref for PageMgr {
-    type Target = Mutex<PageMgrInternal>;
+    type Target = QMutex<PageMgrInternal>;
 
-    fn deref(&self) -> &Mutex<PageMgrInternal> {
+    fn deref(&self) -> &QMutex<PageMgrInternal> {
         &self.0
     }
 }
@@ -76,7 +77,7 @@ extern "C" {
 
 impl PageMgr {
     pub fn New() -> Self {
-        return Self(Mutex::new(PageMgrInternal::New()))
+        return Self(QMutex::new(PageMgrInternal::New()))
     }
 
     pub fn PrintRefs(&self) {
@@ -89,7 +90,7 @@ impl PageMgr {
 }
 
 pub struct PageMgrInternal {
-    pub allocator: Arc<Mutex<PagePool>>,
+    pub allocator: Arc<QMutex<PagePool>>,
     pub zeroPage: u64,
     pub vsyscallPages: Vec<u64>,
 }
@@ -97,13 +98,13 @@ pub struct PageMgrInternal {
 impl PageMgrInternal {
     pub fn New() -> Self {
         return Self {
-            allocator: Arc::new(Mutex::new(PagePool::New())),
+            allocator: Arc::new(QMutex::new(PagePool::New())),
             zeroPage: 0,
             vsyscallPages: Vec::new(),
         }
     }
 
-    fn PagePool(&self) -> Arc<Mutex<PagePool>> {
+    fn PagePool(&self) -> Arc<QMutex<PagePool>> {
         return self.allocator.clone();
     }
 

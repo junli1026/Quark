@@ -17,11 +17,12 @@ use alloc::sync::Weak;
 use core::ops::Deref;
 use alloc::string::ToString;
 use core::any::Any;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::super::super::kernel::waiter::*;
 use super::super::super::super::tcpip::tcpip::*;
 use super::super::super::super::qlib::common::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::linux::socket::*;
 use super::super::super::super::task::*;
@@ -37,7 +38,7 @@ use super::connectioned::*;
 // socketpair(2).
 
 #[derive(Clone)]
-pub struct ConnectionLessEndPointWeak(Weak<Mutex<BaseEndpointInternal>>);
+pub struct ConnectionLessEndPointWeak(Weak<QMutex<BaseEndpointInternal>>);
 
 impl ConnectionLessEndPointWeak {
     pub fn Upgrade(&self) -> Option<ConnectionLessEndPoint> {

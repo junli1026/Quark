@@ -13,11 +13,12 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::threadmgr::task_block::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::entry::*;
 use super::queue::*;
 use super::*;
@@ -29,12 +30,12 @@ pub struct QLockInternal {
 }
 
 #[derive(Default, Clone)]
-pub struct QLock(Arc<Mutex<QLockInternal>>);
+pub struct QLock(Arc<QMutex<QLockInternal>>);
 
 impl Deref for QLock {
-    type Target = Arc<Mutex<QLockInternal>>;
+    type Target = Arc<QMutex<QLockInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<QLockInternal>> {
+    fn deref(&self) -> &Arc<QMutex<QLockInternal>> {
         &self.0
     }
 }

@@ -14,12 +14,13 @@
 
 use alloc::sync::Arc;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 
 use super::super::super::super::qlib::common::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::auth::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::super::task::*;
 use super::super::super::attr::*;
 use super::super::super::file::*;
@@ -46,7 +47,7 @@ impl DirDataNode for ProcSysDirNode {
     }
 }
 
-pub fn NewSys(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewSys(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let mut contents = BTreeMap::new();
     contents.insert("vm".to_string(), NewVm(task, msrc));
 

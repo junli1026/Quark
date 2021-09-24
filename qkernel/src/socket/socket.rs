@@ -1,7 +1,7 @@
 use alloc::string::ToString;
 use alloc::sync::Arc;
 use spin::RwLock;
-use spin::Mutex;
+//use spin::Mutex;
 use lazy_static::lazy_static;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::vec::Vec;
@@ -11,6 +11,7 @@ use core::sync::atomic::Ordering;
 
 //use super::unix::transport::unix::*;
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::*;
 use super::super::qlib::device::*;
 use super::super::qlib::linux_def::*;
 use super::super::task::*;
@@ -24,8 +25,8 @@ use super::super::fs::host::util::*;
 
 lazy_static! {
     pub static ref FAMILIAES: RwLock<Families> = RwLock::new(Families::New());
-    pub static ref SOCKET_DEVICE : Arc<Mutex<Device>> = NewAnonDevice();
-    pub static ref UNIX_SOCKET_DEVICE : Arc<Mutex<Device>> = NewAnonDevice();
+    pub static ref SOCKET_DEVICE : Arc<QMutex<Device>> = NewAnonDevice();
+    pub static ref UNIX_SOCKET_DEVICE : Arc<QMutex<Device>> = NewAnonDevice();
 }
 
 pub trait Provider: Send + Sync {
@@ -96,7 +97,7 @@ impl Families {
     }
 }
 
-pub fn NewSocketDirent(task: &Task, _d: Arc<Mutex<Device>>, fd: i32) -> Result<Dirent> {
+pub fn NewSocketDirent(task: &Task, _d: Arc<QMutex<Device>>, fd: i32) -> Result<Dirent> {
     let msrc = MountSource::NewHostMountSource(&"/".to_string(), &task.FileOwner(), &WhitelistFileSystem::New(), &MountSourceFlags::default(), false);
 
     let mut fstat = LibcStat::default();
@@ -104,7 +105,7 @@ pub fn NewSocketDirent(task: &Task, _d: Arc<Mutex<Device>>, fd: i32) -> Result<D
     if ret < 0 {
         return Err(Error::SysError(-ret as i32));
     }
-    let inode = Inode::NewHostInode(&Arc::new(Mutex::new(msrc)), fd, &fstat, true)?;
+    let inode = Inode::NewHostInode(&Arc::new(QMutex::new(msrc)), fd, &fstat, true)?;
 
     let name = format!("socket:[{}]", fd);
     return Ok(Dirent::New(&inode, &name.to_string()))

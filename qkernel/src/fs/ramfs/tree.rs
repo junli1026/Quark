@@ -17,7 +17,7 @@ use alloc::string::ToString;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::vec::Vec;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::dir::*;
 use super::super::mount::*;
@@ -29,8 +29,9 @@ use super::super::super::qlib::auth::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::device::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 
-fn emptyDir(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+fn emptyDir(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let dir = Dir::New(task, BTreeMap::new(), &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o777)));
     let deviceId = PSEUDO_DEVICE.lock().id.DeviceID();
     let inodeId = PSEUDO_DEVICE.lock().NextIno();
@@ -52,10 +53,10 @@ fn emptyDir(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
         ..Default::default()
     };
 
-    return Inode(Arc::new(Mutex::new(inodeInternal)))
+    return Inode(Arc::new(QMutex::new(inodeInternal)))
 }
 
-fn makeSubdir(task: &Task, msrc: &Arc<Mutex<MountSource>>, root: &Dir, subDir: &str) {
+fn makeSubdir(task: &Task, msrc: &Arc<QMutex<MountSource>>, root: &Dir, subDir: &str) {
     let mut root = root.clone();
 
     let arr: Vec<&str> = subDir.split('/').collect();
@@ -79,7 +80,7 @@ fn makeSubdir(task: &Task, msrc: &Arc<Mutex<MountSource>>, root: &Dir, subDir: &
     }
 }
 
-pub fn MakeDirectoryTree(task: &Task, msrc: &Arc<Mutex<MountSource>>, subDirs: &Vec<String>) -> Result<Inode> {
+pub fn MakeDirectoryTree(task: &Task, msrc: &Arc<QMutex<MountSource>>, subDirs: &Vec<String>) -> Result<Inode> {
     let root = emptyDir(task, msrc);
     let dir = root.lock().InodeOp.as_any().downcast_ref::<Dir>().unwrap().clone();
 
@@ -117,7 +118,7 @@ mod tests {
 
         let task = Task::default();
         let mount = MountSource::NewPseudoMountSource();
-        let tree = MakeDirectoryTree(&task, &Arc::new(Mutex::new(mount)), &subdirs).unwrap();
+        let tree = MakeDirectoryTree(&task, &Arc::new(QMutex::new(mount)), &subdirs).unwrap();
 
         let mm = MountNs::New(&tree);
         let root = mm.root.clone();
@@ -140,7 +141,7 @@ mod tests {
 
         let task = Task::default();
         let mount = MountSource::NewPseudoMountSource();
-        let tree = MakeDirectoryTree(&task, &Arc::new(Mutex::new(mount)), &subdirs).unwrap();
+        let tree = MakeDirectoryTree(&task, &Arc::new(QMutex::new(mount)), &subdirs).unwrap();
 
         let mm = MountNs::New(&tree);
         let root = mm.root.clone();

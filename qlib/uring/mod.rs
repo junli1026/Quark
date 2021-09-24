@@ -20,7 +20,7 @@ pub mod submit;
 pub mod porting;
 pub mod sys;
 
-use spin::Mutex;
+//use spin::Mutex;
 pub use self::cqueue::CompletionQueue;
 pub use self::register::Probe;
 pub use self::squeue::SubmissionQueue;
@@ -28,7 +28,7 @@ pub use self::submit::Submitter;
 use self::util::{Fd, Mmap};
 use self::porting::*;
 use super::common::*;
-
+use super::mutex::*;
 
 
 #[derive(Default)]
@@ -58,11 +58,11 @@ pub struct IoUring {
 impl IoUring {
     pub fn CopyTo(&self, submission: u64, completion: u64) {
         let submission = unsafe {
-            &*(submission as * const Mutex<Submission>)
+            &*(submission as * const QMutex<Submission>)
         };
 
         let completion = unsafe {
-            &*(completion as * const Mutex<Completion>)
+            &*(completion as * const QMutex<Completion>)
         };
 
         let mut s = submission.lock();

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use spin::RwLock;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
@@ -29,6 +29,7 @@ use super::super::uid::NewUID;
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
 use super::super::qlib::auxv::*;
+use super::super::qlib::mutex::*;
 use super::super::task::*;
 //use super::super::qlib::context::Context;
 use super::super::qlib::cpuid::*;
@@ -60,14 +61,14 @@ use super::time::*;
 use super::platform::*;
 
 lazy_static! {
-    pub static ref KERNEL: Mutex<Option<Kernel>> = Mutex::new(None);
+    pub static ref KERNEL: QMutex<Option<Kernel>> = QMutex::new(None);
     pub static ref ASYNC_PROCESS : AsyncProcess = AsyncProcess::default();
 }
 
 #[derive(Default)]
 pub struct AsyncProcess {
     pub lastTsc: AtomicI64,
-    pub lastProcessTime: Mutex<i64>
+    pub lastProcessTime: QMutex<i64>
 }
 
 const TSC_GAP : i64 = 1_000_000; // for 1GHZ process, it is 1 ms
@@ -132,10 +133,10 @@ pub struct KernelInternal {
     // ensure that concurrent users of the Kernel *outside* the Kernel's
     // control cannot affect its state by calling e.g.
     // Kernel.SendExternalSignal.)
-    pub extMu: Mutex<()>,
+    pub extMu: QMutex<()>,
 
     // See InitKernelArgs for the meaning of these fields.
-    pub featureSet: Arc<Mutex<FeatureSet>>,
+    pub featureSet: Arc<QMutex<FeatureSet>>,
     pub tasks: TaskSet,
     pub rootUserNamespace: UserNameSpace,
     pub rootUTSNamespace: UTSNamespace,
@@ -153,7 +154,7 @@ pub struct KernelInternal {
     //
     // globalInit is mutable until it is assigned by the first successful call
     // to CreateProcess, and is protected by extMu.
-    pub globalInit: Mutex<Option<ThreadGroup>>,
+    pub globalInit: QMutex<Option<ThreadGroup>>,
 
     // cpuClock is incremented every linux.ClockTick. cpuClock is used to
     // measure task CPU usage, since sampling monotonicClock twice on every
@@ -167,7 +168,7 @@ pub struct KernelInternal {
     // cpuClock is mutable, and is accessed using atomic memory operations.
     pub cpuClock: AtomicU64,
 
-    pub staticInfo: Mutex<StaticInfo>,
+    pub staticInfo: QMutex<StaticInfo>,
 
     //pub cpuClockTicker: Timer,
     pub cpuClockTicker: Arc<KernelCPUClockTicker>,
@@ -193,7 +194,7 @@ impl KernelInternal {
 
         let tg = ThreadGroup {
             uid: NewUID(),
-            data: Arc::new(Mutex::new(internal))
+            data: Arc::new(QMutex::new(internal))
         };
 
         let listener = ITimerRealListener {
@@ -222,7 +223,7 @@ impl Kernel {
     pub fn Init(args: InitKernalArgs) -> Self {
         let cpuTicker = Arc::new(KernelCPUClockTicker::New());
         let internal = KernelInternal {
-            extMu: Mutex::new(()),
+            extMu: QMutex::new(()),
             featureSet: args.FeatureSet,
             tasks: TaskSet::New(),
             rootUserNamespace: args.RootUserNamespace,
@@ -230,9 +231,9 @@ impl Kernel {
             rootIPCNamespace: args.RootIPCNamespace,
             applicationCores: args.ApplicationCores as usize - 1,
             mounts: RwLock::new(None),
-            globalInit: Mutex::new(None),
+            globalInit: QMutex::new(None),
             cpuClock: AtomicU64::new(0),
-            staticInfo: Mutex::new(StaticInfo {
+            staticInfo: QMutex::new(StaticInfo {
                 ApplicationCores: args.ApplicationCores,
                 useHostCores: false,
                 cpu: 0,
@@ -524,7 +525,7 @@ impl<'a> Context for CreateProcessContext<'a> {
 #[derive(Default)]
 pub struct InitKernalArgs {
     // FeatureSet is the emulated CPU feature set.
-    pub FeatureSet: Arc<Mutex<FeatureSet>>,
+    pub FeatureSet: Arc<QMutex<FeatureSet>>,
 
     // RootUserNamespace is the root user namespace.
     pub RootUserNamespace: UserNameSpace,

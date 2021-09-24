@@ -13,13 +13,14 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use core::ops::Deref;
 use alloc::vec::Vec;
 
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
+use super::super::qlib::mutex::*;
 use super::super::qlib::auth::userns::*;
 use super::session::*;
 use super::thread::*;
@@ -56,12 +57,12 @@ pub struct PIDNamespaceInternal {
 }
 
 #[derive(Clone, Default)]
-pub struct PIDNamespace(pub Arc<Mutex<PIDNamespaceInternal>>);
+pub struct PIDNamespace(pub Arc<QMutex<PIDNamespaceInternal>>);
 
 impl Deref for PIDNamespace {
-    type Target = Arc<Mutex<PIDNamespaceInternal>>;
+    type Target = Arc<QMutex<PIDNamespaceInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<PIDNamespaceInternal>> {
+    fn deref(&self) -> &Arc<QMutex<PIDNamespaceInternal>> {
         &self.0
     }
 }
@@ -91,7 +92,7 @@ impl PIDNamespace {
             exiting: false,
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     pub fn Count(&self) -> usize {

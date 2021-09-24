@@ -119,7 +119,9 @@ pub fn IOWait() {
                 continue;
             }
 
+            //error!("IOWait sleep");
             HostSpace::IOWait();
+            //error!("IOWait wakeup");
             start = Rdtsc();
             SHARESPACE.kernelIOThreadWaiting.store(false, Ordering::Release);
         }
@@ -151,10 +153,10 @@ pub fn WaitFn() {
             }
 
             Some(newTask) => {
-                //error!("WaitFn newTask1 is {:x?}", &newTask);
+                //debug!("WaitFn newTask1 is {:x?}", &newTask);
                 CPULocal::SetCPUState(VcpuState::Running);
                 let current = TaskId::New(CPULocal::CurrentTask());
-                //error!("WaitFn newTask2 is {:x?}", &newTask);
+                //debug!("WaitFn newTask2 is {:x?}", &newTask);
                 switch(current, newTask);
 
                 let pendingFreeStack = CPULocal::PendingFreeStack();
@@ -174,8 +176,14 @@ pub fn WaitFn() {
 
 #[inline]
 pub fn PollAsyncMsg() -> usize {
+    //print!("PollAsyncMsg 1");
     ASYNC_PROCESS.Process();
-    return HostInputProcess() + QUringTrigger();
+    //print!("PollAsyncMsg 2");
+    let cnt = HostInputProcess();
+    //print!("PollAsyncMsg 3");
+    let cnt = cnt + QUringTrigger();
+    //print!("PollAsyncMsg 4 cnt {}", cnt);
+    return cnt;
 }
 
 #[inline]

@@ -14,16 +14,18 @@
 
 use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::collections::btree_map::BTreeMap;
 
+use super::mutex::*;
+
 use lazy_static::lazy_static;
 
 lazy_static! {
-    pub static ref ALL_METRICS: Mutex<MetricSet> = Mutex::new(MetricSet::New());
+    pub static ref ALL_METRICS: QMutex<MetricSet> = QMutex::new(MetricSet::New());
 }
 
 pub fn NewU64Metric(name: &str, sync: bool, description: &str) -> Arc<U64Metric> {

@@ -13,12 +13,13 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::collections::btree_map::BTreeMap;
 
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::filesystems::*;
 use super::super::host::fs::*;
@@ -53,7 +54,7 @@ impl Filesystem for ProcFileSystem {
         let cgroups = BTreeMap::new();
 
         let msrc = MountSource::NewCachingMountSource(self, flags);
-        let inode = NewProc(task, &Arc::new(Mutex::new(msrc)), cgroups);
+        let inode = NewProc(task, &Arc::new(QMutex::new(msrc)), cgroups);
         return Ok(inode)
     }
 

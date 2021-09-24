@@ -15,7 +15,7 @@
 use alloc::string::String;
 use alloc::sync::Arc;
 use alloc::sync::Weak;
-use spin::Mutex;
+//use spin::Mutex;
 use spin::RwLock;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::string::ToString;
@@ -28,6 +28,7 @@ use super::super::id_mgr::*;
 use super::super::qlib::common::*;
 use super::super::task::*;
 use super::super::qlib::linux_def::*;
+use super::super::qlib::mutex::*;
 use super::super::socket::unix::transport::unix::*;
 use super::inode::*;
 use super::flags::*;
@@ -38,18 +39,18 @@ use super::mount::*;
 pub static RENAME: RwLock<()> = RwLock::new(());
 
 #[derive(Clone)]
-pub struct Dirent(pub Arc<(Mutex<InterDirent>, u64)>);
+pub struct Dirent(pub Arc<(QMutex<InterDirent>, u64)>);
 
 impl Default for Dirent {
     fn default() -> Self {
-        return Self(Arc::new((Mutex::new(InterDirent::default()), UniqueID())))
+        return Self(Arc::new((QMutex::new(InterDirent::default()), UniqueID())))
     }
 }
 
 impl Deref for Dirent {
-    type Target = Arc<(Mutex<InterDirent>, u64)>;
+    type Target = Arc<(QMutex<InterDirent>, u64)>;
 
-    fn deref(&self) -> &Arc<(Mutex<InterDirent>, u64)> {
+    fn deref(&self) -> &Arc<(QMutex<InterDirent>, u64)> {
         &self.0
     }
 }
@@ -64,7 +65,7 @@ impl Eq for Dirent {}
 
 impl Dirent {
     pub fn New(inode: &Inode, name: &str) -> Self {
-        return Self(Arc::new((Mutex::new(InterDirent {
+        return Self(Arc::new((QMutex::new(InterDirent {
             Inode: inode.clone(),
             Name: name.to_string(),
             Parent: None,
@@ -75,7 +76,7 @@ impl Dirent {
     }
 
     pub fn NewTransient(inode: &Inode) -> Self {
-        let iDirent = Mutex::new(InterDirent {
+        let iDirent = QMutex::new(InterDirent {
             Inode: inode.clone(),
             Name: "transient".to_string(),
             Parent: None,
@@ -343,7 +344,7 @@ impl Dirent {
         return self.walk(task, root, name)
     }
 
-    pub fn AddChild(&self, child: &Arc<(Mutex<InterDirent>, u64)>) -> Option<Weak<(Mutex<InterDirent>, u64)>> {
+    pub fn AddChild(&self, child: &Arc<(QMutex<InterDirent>, u64)>) -> Option<Weak<(QMutex<InterDirent>, u64)>> {
         assert!(child.0.lock().IsRoot(), "Add child request the child has no parent");
         child.0.lock().Parent = Some(self.clone());
         child.0.lock().frozen = (self.0).0.lock().frozen;
@@ -351,7 +352,7 @@ impl Dirent {
         return self.addChild(child)
     }
 
-    pub fn addChild(&self, child: &Arc<(Mutex<InterDirent>, u64)>) -> Option<Weak<(Mutex<InterDirent>, u64)>> {
+    pub fn addChild(&self, child: &Arc<(QMutex<InterDirent>, u64)>) -> Option<Weak<(QMutex<InterDirent>, u64)>> {
         assert!(Dirent(child.clone()).Parent().unwrap() == self.clone(), "Dirent addChild assumes the child already belongs to the parent");
 
         let name = child.0.lock().Name.clone();
@@ -564,7 +565,7 @@ impl Dirent {
             return Err(Error::SysError(SysErr::ENOENT))
         }
 
-        let replacement = Arc::new((Mutex::new(InterDirent::New(inode.clone(), &(self.0).0.lock().Name)), UniqueID()));
+        let replacement = Arc::new((QMutex::new(InterDirent::New(inode.clone(), &(self.0).0.lock().Name)), UniqueID()));
         replacement.0.lock().mounted = true;
 
         parent.AddChild(&replacement);
@@ -965,7 +966,7 @@ pub struct InterDirent {
     pub Inode: Inode,
     pub Name: String,
     pub Parent: Option<Dirent>,
-    pub Children: BTreeMap<String, Weak<(Mutex<InterDirent>, u64)>>,
+    pub Children: BTreeMap<String, Weak<(QMutex<InterDirent>, u64)>>,
 
     pub frozen: bool,
     pub mounted: bool,

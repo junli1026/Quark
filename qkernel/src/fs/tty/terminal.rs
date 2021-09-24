@@ -13,16 +13,17 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::host::tty::*;
 use super::dir::*;
 use super::line_discipline::*;
+use super::super::super::qlib::mutex::*;
 
 pub struct Terminal {
     pub n: u32,
     pub d: DirInodeOperations,
-    pub ld: Arc<Mutex<LineDiscipline>>,
+    pub ld: Arc<QMutex<LineDiscipline>>,
 }
 
 impl Terminal {
@@ -30,7 +31,7 @@ impl Terminal {
         return Self {
             d: d.clone(),
             n: n,
-            ld: Arc::new(Mutex::new(LineDiscipline::New(DEFAULT_SLAVE_TERMIOS)))
+            ld: Arc::new(QMutex::new(LineDiscipline::New(DEFAULT_SLAVE_TERMIOS)))
         }
     }
 }

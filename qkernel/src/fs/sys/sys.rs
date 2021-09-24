@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -21,6 +21,7 @@ use alloc::string::ToString;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
 use super::super::super::qlib::device::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::attr::*;
 use super::super::mount::*;
@@ -28,7 +29,7 @@ use super::super::inode::*;
 use super::super::ramfs::dir::*;
 use super::devices::*;
 
-pub fn NewFile<T: InodeOperations + 'static>(iops: &Arc<T>, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewFile<T: InodeOperations + 'static>(iops: &Arc<T>, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let deviceId = SYS_DEVICE.lock().id.DeviceID();
     let inodeId = SYS_DEVICE.lock().NextIno();
 
@@ -44,7 +45,7 @@ pub fn NewFile<T: InodeOperations + 'static>(iops: &Arc<T>, msrc: &Arc<Mutex<Mou
     return Inode::New(iops, msrc, &sattr);
 }
 
-pub fn NewDir(task: &Task, msrc: &Arc<Mutex<MountSource>>, contents: BTreeMap<String, Inode>) -> Inode {
+pub fn NewDir(task: &Task, msrc: &Arc<QMutex<MountSource>>, contents: BTreeMap<String, Inode>) -> Inode {
     let d = Dir::New(task, contents, &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o0555)));
 
     let deviceId = SYS_DEVICE.lock().id.DeviceID();
@@ -62,7 +63,7 @@ pub fn NewDir(task: &Task, msrc: &Arc<Mutex<MountSource>>, contents: BTreeMap<St
     return Inode::New(&Arc::new(d), msrc, &sattr);
 }
 
-pub fn NewSys(task: &Task, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewSys(task: &Task, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let mut content = BTreeMap::new();
     content.insert("block".to_string(), NewDir(task, msrc, BTreeMap::new()));
     content.insert("bus".to_string(), NewDir(task, msrc, BTreeMap::new()));

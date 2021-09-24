@@ -14,12 +14,13 @@
 
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::super::super::super::qlib::common::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::addr::*;
 use super::super::super::super::qlib::auth::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::fsutil::file::readonly_file::*;
 use super::super::super::super::task::*;
 use super::super::super::file::*;
@@ -38,7 +39,7 @@ pub enum ExecArgType {
     EnvironExecArg,
 }
 
-pub fn NewExecArg(task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>, typ: ExecArgType) -> Inode {
+pub fn NewExecArg(task: &Task, thread: &Thread, msrc: &Arc<QMutex<MountSource>>, typ: ExecArgType) -> Inode {
     let v = NewExecArgSimpleFileInode(task, thread, &ROOT_OWNER, &FilePermissions::FromMode(FileMode(0o400)), FSMagic::PROC_SUPER_MAGIC, typ);
     return NewProcInode(&Arc::new(v), msrc, InodeType::SpecialFile, Some(thread.clone()))
 }

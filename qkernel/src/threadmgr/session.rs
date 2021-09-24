@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use alloc::collections::btree_set::BTreeSet;
 use core::cmp::*;
@@ -22,6 +22,7 @@ use super::super::uid::NewUID;
 use super::thread::*;
 use super::thread_group::*;
 use super::processgroup::*;
+use super::super::qlib::mutex::*;
 
 #[derive(Default)]
 pub struct SessionInternal {
@@ -34,13 +35,13 @@ pub struct SessionInternal {
 #[derive(Clone, Default)]
 pub struct Session {
     pub uid: UniqueID,
-    pub data: Arc<Mutex<SessionInternal>>
+    pub data: Arc<QMutex<SessionInternal>>
 }
 
 impl Deref for Session {
-    type Target = Arc<Mutex<SessionInternal>>;
+    type Target = Arc<QMutex<SessionInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<SessionInternal>> {
+    fn deref(&self) -> &Arc<QMutex<SessionInternal>> {
         &self.data
     }
 }
@@ -77,7 +78,7 @@ impl Session {
 
         return Self {
             uid: NewUID(),
-            data: Arc::new(Mutex::new(internal)),
+            data: Arc::new(QMutex::new(internal)),
         }
     }
 }

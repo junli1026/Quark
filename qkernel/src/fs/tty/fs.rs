@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::String;
 use alloc::string::ToString;
 use core::any::Any;
@@ -21,6 +21,7 @@ use core::any::Any;
 use super::super::super::qlib::common::*;
 use super::super::super::task::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::super::filesystems::*;
 use super::super::inode::*;
 use super::super::mount::*;
@@ -43,9 +44,9 @@ impl Filesystem for PtsTmpfs {
             return Err(Error::SysError(SysErr::EINVAL))
         }
 
-        let mops = Arc::new(Mutex::new(PtsSuperOperations {}));
+        let mops = Arc::new(QMutex::new(PtsSuperOperations {}));
         let msrc = MountSource::NewPtsMountSource(&mops, self, flags);
-        let dir = NewDir(task, &Arc::new(Mutex::new(msrc)));
+        let dir = NewDir(task, &Arc::new(QMutex::new(msrc)));
         return Ok(dir)
     }
 

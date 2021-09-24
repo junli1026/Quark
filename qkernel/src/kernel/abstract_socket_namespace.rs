@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use core::ops::Deref;
 use lazy_static::lazy_static;
@@ -22,6 +22,7 @@ use alloc::vec::Vec;
 use super::super::socket::unix::transport::unix::*;
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
+use super::super::qlib::mutex::*;
 
 lazy_static! {
     pub static ref ABSTRACT_SOCKET: AbstractSocketNamespace = AbstractSocketNamespace::default();
@@ -36,12 +37,12 @@ pub fn Bind(name: Vec<u8>, ep: &BoundEndpoint) -> Result<()> {
 }
 
 #[derive(Clone, Default)]
-pub struct AbstractSocketNamespace(Arc<Mutex<BTreeMap<Vec<u8>, BoundEndpointWeak>>>);
+pub struct AbstractSocketNamespace(Arc<QMutex<BTreeMap<Vec<u8>, BoundEndpointWeak>>>);
 
 impl Deref for AbstractSocketNamespace {
-    type Target = Arc<Mutex<BTreeMap<Vec<u8>, BoundEndpointWeak>>>;
+    type Target = Arc<QMutex<BTreeMap<Vec<u8>, BoundEndpointWeak>>>;
 
-    fn deref(&self) -> &Arc<Mutex<BTreeMap<Vec<u8>, BoundEndpointWeak>>> {
+    fn deref(&self) -> &Arc<QMutex<BTreeMap<Vec<u8>, BoundEndpointWeak>>> {
         &self.0
     }
 }

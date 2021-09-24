@@ -17,12 +17,13 @@ use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::qlib::addr::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::super::memmgr::*;
 use super::super::super::memmgr::mm::*;
@@ -50,12 +51,12 @@ pub struct AIOManagerIntern {
 }
 
 #[derive(Default, Clone)]
-pub struct AIOManager(Arc<Mutex<AIOManagerIntern>>);
+pub struct AIOManager(Arc<QMutex<AIOManagerIntern>>);
 
 impl Deref for AIOManager {
-    type Target = Arc<Mutex<AIOManagerIntern>>;
+    type Target = Arc<QMutex<AIOManagerIntern>>;
 
-    fn deref(&self) -> &Arc<Mutex<AIOManagerIntern>> {
+    fn deref(&self) -> &Arc<QMutex<AIOManagerIntern>> {
         &self.0
     }
 }
@@ -254,12 +255,12 @@ pub struct AIOContextIntern {
 }
 
 #[derive(Default, Clone)]
-pub struct AIOContext(Arc<Mutex<AIOContextIntern>>);
+pub struct AIOContext(Arc<QMutex<AIOContextIntern>>);
 
 impl Deref for AIOContext {
-    type Target = Arc<Mutex<AIOContextIntern>>;
+    type Target = Arc<QMutex<AIOContextIntern>>;
 
-    fn deref(&self) -> &Arc<Mutex<AIOContextIntern>> {
+    fn deref(&self) -> &Arc<QMutex<AIOContextIntern>> {
         &self.0
     }
 }
@@ -300,7 +301,7 @@ impl AIOContext {
             ..Default::default()
         };
 
-        return Self(Arc::new(Mutex::new(intern)))
+        return Self(Arc::new(QMutex::new(intern)))
     }
 
     // destroy marks the context dead.

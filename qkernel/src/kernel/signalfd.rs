@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use core::any::Any;
 use alloc::sync::Arc;
 use core::ops::Deref;
@@ -28,6 +28,7 @@ use super::super::task::*;
 use super::waiter::*;
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
+use super::super::qlib::mutex::*;
 use super::super::threadmgr::thread::*;
 use super::super::SignalDef::*;
 
@@ -72,7 +73,7 @@ pub struct SignalOperationInternal {
     pub target: Thread,
 
     // mask is the signal mask,
-    pub mask: Mutex<SignalSet>,
+    pub mask: QMutex<SignalSet>,
 }
 
 pub struct SignalOperation(Arc<SignalOperationInternal>);
@@ -93,7 +94,7 @@ impl SignalOperation {
 
         let intern = SignalOperationInternal {
             target: task.Thread(),
-            mask: Mutex::new(mask)
+            mask: QMutex::new(mask)
         };
 
         let fops = Self(Arc::new(intern));

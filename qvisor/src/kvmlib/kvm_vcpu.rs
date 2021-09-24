@@ -468,15 +468,16 @@ impl KVMVcpu {
                             URING_MGR.lock().Wake().expect("qlib::HYPER CALL_URING_WAKE fail");
                         }
                         qlib::HYPERCALL_INIT => {
-                            info!("get io out: HYPERCALL_INIT");
-
                             let regs = self.vcpu.get_regs().map_err(|e| Error::IOError(format!("io::error is {:?}", e)))?;
                             let mut vms = VMS.lock();
                             let sharespace = unsafe {
                                 &mut *(regs.rbx as * mut ShareSpace)
                             };
 
+                            info!("get io out: HYPERCALL_INIT sharespace {:x}", regs.rbx);
+
                             sharespace.Init();
+                            sharespace.PrintAddr();
                             super::URING_MGR.lock().Addfd(super::super::print::LOG.lock().Logfd()).unwrap();
                             if !sharespace.config.SlowPrint {
                                 super::super::print::EnableKernelPrint();

@@ -588,6 +588,13 @@ impl Task {
     }
 
     #[inline(always)]
+    pub fn TaskAddress() -> u64{
+        let rsp = GetRsp();
+        //Self::Current().Check();
+        return rsp; //& DEFAULT_STACK_MAST;
+    }
+
+    #[inline(always)]
     pub fn Current() -> &'static mut Task {
         //let rsp: u64;
         //unsafe { llvm_asm!("mov %rsp, $0" : "=r" (rsp) ) };

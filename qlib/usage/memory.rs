@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 //use core::sync::atomic::AtomicU64;
 //use core::sync::atomic::Ordering;
+
+use super::super::mutex::*;
 
 pub enum MemoryKind {
     // System represents miscellaneous system memory. This may include
@@ -76,12 +78,12 @@ pub struct MemoryStats {
     pub RTMapped    : u64,
 }
 
-pub struct MemoryAccounting(Mutex<MemoryStats>);
+pub struct MemoryAccounting(QMutex<MemoryStats>);
 
 impl Deref for MemoryAccounting {
-    type Target = Mutex<MemoryStats>;
+    type Target = QMutex<MemoryStats>;
 
-    fn deref(&self) -> &Mutex<MemoryStats> {
+    fn deref(&self) -> &QMutex<MemoryStats> {
         &self.0
     }
 }

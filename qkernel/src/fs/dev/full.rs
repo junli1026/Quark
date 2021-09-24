@@ -14,7 +14,7 @@
 
 use alloc::string::String;
 use spin::RwLock;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
 use alloc::vec::Vec;
@@ -23,6 +23,7 @@ use alloc::sync::Arc;
 use socket::unix::transport::unix::BoundEndpoint;
 use super::super::host::hostinodeop::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::auth::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::task::*;
@@ -139,7 +140,7 @@ impl InodeOperations for FullDevice {
         let f = FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((flags, None)),
+            flags: QMutex::new((flags, None)),
             offset: QLock::New(0),
             FileOp: Arc::new(fops),
         };

@@ -15,7 +15,7 @@
 use alloc::sync::Arc;
 use alloc::sync::Weak;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::String;
 use alloc::string::ToString;
 use core::any::Any;
@@ -30,6 +30,7 @@ use super::super::qlib::auth::*;
 use super::super::qlib::range::*;
 use super::super::kernel::waiter::*;
 use super::super::qlib::linux_def::*;
+use super::super::qlib::mutex::*;
 //use super::super::socket::unix::transport::unix::*;
 use super::super::task::*;
 use super::super::memmgr::*;
@@ -261,7 +262,7 @@ pub trait FileOperations: Sync + Send + Waitable + SockOperations + SpliceOperat
 pub struct FileInternal {
     pub UniqueId: u64,
     pub Dirent: Dirent,
-    pub flags: Mutex<(FileFlags, Option<FileAsync>)>,
+    pub flags: QMutex<(FileFlags, Option<FileAsync>)>,
 
     //when we need to update the offset, we need to lock the offset lock
     //it is qlock, so the thread can switch when lock
@@ -433,7 +434,7 @@ impl File {
         let f = FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((*flags, None)),
+            flags: QMutex::new((*flags, None)),
             //offsetLock: QLock::default(),
             offset: QLock::New(0),
             FileOp: Arc::new(fops),
@@ -465,7 +466,7 @@ impl File {
 
             _ => {
                 let msrc = MountSource::NewHostMountSource(&"/".to_string(), mounter, &WhitelistFileSystem::New(), &MountSourceFlags::default(), false);
-                let inode = Inode::NewHostInode(&Arc::new(Mutex::new(msrc)), fd, &fstat, fileFlags.Write)?;
+                let inode = Inode::NewHostInode(&Arc::new(QMutex::new(msrc)), fd, &fstat, fileFlags.Write)?;
                 let name = format!("host:[{}]", inode.lock().StableAttr.InodeId);
                 let dirent = Dirent::New(&inode, &name);
 
@@ -496,7 +497,7 @@ impl File {
         return File(Arc::new(FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((flags, None)),
+            flags: QMutex::new((flags, None)),
             //offsetLock: QLock::default(),
             offset: QLock::New(0),
             FileOp: fops,

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::string::String;
 use alloc::string::ToString;
@@ -23,6 +23,7 @@ use core::ops::Deref;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::device::*;
 use super::super::super::qlib::task_mgr::*;
 use super::super::super::fs::fsutil::file::*;
@@ -55,16 +56,16 @@ use super::stat::*;
 pub struct ProcNodeInternal {
     pub kernel: Kernel,
     pub pidns: PIDNamespace,
-    pub cgroupControllers: Arc<Mutex<BTreeMap<String, String>>>,
+    pub cgroupControllers: Arc<QMutex<BTreeMap<String, String>>>,
 }
 
 #[derive(Clone)]
-pub struct ProcNode(Arc<Mutex<ProcNodeInternal>>);
+pub struct ProcNode(Arc<QMutex<ProcNodeInternal>>);
 
 impl Deref for ProcNode {
-    type Target = Arc<Mutex<ProcNodeInternal>>;
+    type Target = Arc<QMutex<ProcNodeInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<ProcNodeInternal>> {
+    fn deref(&self) -> &Arc<QMutex<ProcNodeInternal>> {
         &self.0
     }
 }
@@ -107,7 +108,7 @@ impl DirDataNode for ProcNode {
 
 }
 
-pub fn NewProc(task: &Task, msrc: &Arc<Mutex<MountSource>>, cgroupControllers: BTreeMap<String, String>) -> Inode {
+pub fn NewProc(task: &Task, msrc: &Arc<QMutex<MountSource>>, cgroupControllers: BTreeMap<String, String>) -> Inode {
     let mut contents = BTreeMap::new();
 
     let kernel = GetKernel();
@@ -130,12 +131,12 @@ pub fn NewProc(task: &Task, msrc: &Arc<Mutex<MountSource>>, cgroupControllers: B
     let proc = ProcNodeInternal {
         kernel: kernel,
         pidns: pidns,
-        cgroupControllers: Arc::new(Mutex::new(cgroupControllers)),
+        cgroupControllers: Arc::new(QMutex::new(cgroupControllers)),
     };
 
     let p = DirNode {
         dir: iops,
-        data: ProcNode(Arc::new(Mutex::new(proc)))
+        data: ProcNode(Arc::new(QMutex::new(proc)))
     };
 
     return NewProcInode(&Arc::new(p), msrc, InodeType::SpecialDirectory, None)
@@ -161,7 +162,7 @@ impl ReadLinkNode for ProcessSelfNode {
     }
 }
 
-pub fn NewProcessSelf(task: &Task, pidns: &PIDNamespace, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewProcessSelf(task: &Task, pidns: &PIDNamespace, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let node = ProcessSelfNode {
         pidns: pidns.clone(),
     };
@@ -190,7 +191,7 @@ impl ReadLinkNode for ThreadSelfNode {
     }
 }
 
-pub fn NewThreadSelf(task: &Task, pidns: &PIDNamespace, msrc: &Arc<Mutex<MountSource>>) -> Inode {
+pub fn NewThreadSelf(task: &Task, pidns: &PIDNamespace, msrc: &Arc<QMutex<MountSource>>) -> Inode {
     let node = ThreadSelfNode {
         pidns: pidns.clone(),
     };

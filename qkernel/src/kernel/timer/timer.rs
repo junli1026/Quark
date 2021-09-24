@@ -13,12 +13,13 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::linux::time::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::SignalDef::*;
 use super::super::super::task::*;
 use super::super::super::threadmgr::thread_group::*;
@@ -281,12 +282,12 @@ impl TimerInternal {
 }
 
 #[derive(Clone, Default)]
-pub struct Timer(Arc<Mutex<TimerInternal>>);
+pub struct Timer(Arc<QMutex<TimerInternal>>);
 
 impl Deref for Timer {
-    type Target = Arc<Mutex<TimerInternal>>;
+    type Target = Arc<QMutex<TimerInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<TimerInternal>> {
+    fn deref(&self) -> &Arc<QMutex<TimerInternal>> {
         &self.0
     }
 }
@@ -323,7 +324,7 @@ impl Timer {
             kicker: None,
         };
 
-        let mut res = Self(Arc::new(Mutex::new(internal)));
+        let mut res = Self(Arc::new(QMutex::new(internal)));
         res.Init();
         return res;
     }
@@ -337,7 +338,7 @@ impl Timer {
             kicker: None,
         };
 
-        let mut res = Self(Arc::new(Mutex::new(internal)));
+        let mut res = Self(Arc::new(QMutex::new(internal)));
         res.Init();
 
         let now = clock.Now();
@@ -359,7 +360,7 @@ impl Timer {
             kicker: None,
         };
 
-        let mut res = Self(Arc::new(Mutex::new(internal)));
+        let mut res = Self(Arc::new(QMutex::new(internal)));
         res.Init();
 
         let now = clock.Now();

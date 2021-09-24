@@ -14,7 +14,7 @@
 
 use alloc::sync::Arc;
 use alloc::vec::Vec;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_map::BTreeMap;
 use core::any::Any;
 use core::ops::Deref;
@@ -24,6 +24,7 @@ use alloc::string::ToString;
 
 use super::super::super::task::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::fs::attr::*;
 use super::super::super::fs::dirent::*;
@@ -37,7 +38,7 @@ use super::epoll_entry::*;
 use super::epoll_list::*;
 
 lazy_static! {
-    pub static ref CYCLE_MU : Mutex<()> = Mutex::new(());
+    pub static ref CYCLE_MU : QMutex<()> = QMutex::new(());
 }
 
 // Event describes the event mask that was observed and the user data to be
@@ -89,9 +90,9 @@ impl PollLists {
 #[derive(Default)]
 pub struct EventPollInternal {
     pub queue: Queue,
-    pub files: Mutex<BTreeMap<FileIdentifier, PollEntry>>,
+    pub files: QMutex<BTreeMap<FileIdentifier, PollEntry>>,
 
-    pub lists: Mutex<PollLists>,
+    pub lists: QMutex<PollLists>,
 }
 
 // NewEventPoll allocates and initializes a new event poll object.
@@ -439,7 +440,7 @@ impl EventPoll {
             readyTimeStamp: 0,
         };
 
-        let entry = PollEntry(Arc::new(Mutex::new(entryInternal)));
+        let entry = PollEntry(Arc::new(QMutex::new(entryInternal)));
         entry.lock().waiter.lock().context = WaitContext::EpollContext(entry.clone());
         files.insert(id, entry.clone());
 

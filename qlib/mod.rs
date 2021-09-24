@@ -57,7 +57,7 @@ use core::sync::atomic::AtomicU64;
 use core::sync::atomic::AtomicI32;
 use core::sync::atomic::AtomicBool;
 use core::sync::atomic::Ordering;
-use spin::Mutex;
+//use spin::Mutex;
 
 use super::asm::*;
 use self::task_mgr::*;
@@ -66,6 +66,7 @@ use self::ringbuf::*;
 use self::config::*;
 use self::linux_def::*;
 use self::bytestream::*;
+use self::mutex::*;
 
 pub const HYPERCALL_INIT: u16 = 1;
 pub const HYPERCALL_PANIC: u16 = 2;
@@ -503,8 +504,8 @@ pub enum IOThreadState {
 
 #[repr(align(128))]
 pub struct ShareSpace {
-    pub QInput: QRingBuf<HostInputMsg>, //Mutex<VecDeque<HostInputMsg>>,
-    pub QOutput: QRingBuf<HostOutputMsg>,  //Mutex<VecDeque<HostOutputMsg>>,
+    pub QInput: QRingBuf<HostInputMsg>, //QMutex<VecDeque<HostInputMsg>>,
+    pub QOutput: QRingBuf<HostOutputMsg>,  //QMutex<VecDeque<HostOutputMsg>>,
 
     pub hostIOThreadEventfd: i32,
     pub hostIOThreadTriggerData: u64,
@@ -517,7 +518,7 @@ pub struct ShareSpace {
     pub kernelIOThreadWaiting: AtomicBool,
     pub config: Config,
 
-    pub logBuf: Mutex<Option<ByteStream>>,
+    pub logBuf: QMutex<Option<ByteStream>>,
     pub logfd: AtomicI32,
 
     pub values: [[AtomicU64; 2]; 16],
@@ -526,8 +527,8 @@ pub struct ShareSpace {
 impl ShareSpace {
     pub fn New() -> Self {
         return ShareSpace {
-            QInput: QRingBuf::New(MemoryDef::MSG_QLEN), //Mutex::new(VecDeque::with_capacity(MSG_QLEN)),
-            QOutput: QRingBuf::New(MemoryDef::MSG_QLEN), //Mutex::new(VecDeque::with_capacity(MSG_QLEN)),
+            QInput: QRingBuf::New(MemoryDef::MSG_QLEN), //QMutex::new(VecDeque::with_capacity(MSG_QLEN)),
+            QOutput: QRingBuf::New(MemoryDef::MSG_QLEN), //QMutex::new(VecDeque::with_capacity(MSG_QLEN)),
 
             hostIOThreadEventfd: 0,
             hostIOThreadTriggerData: 1,
@@ -538,7 +539,7 @@ impl ShareSpace {
             guestMsgCount: AtomicU64::new(0),
             kernelIOThreadWaiting: AtomicBool::new(false),
             config: Config::default(),
-            logBuf: Mutex::new(None),
+            logBuf: QMutex::new(None),
             logfd: AtomicI32::new(-1),
             values: [
                 [AtomicU64::new(0), AtomicU64::new(0)], [AtomicU64::new(0), AtomicU64::new(0)], [AtomicU64::new(0), AtomicU64::new(0)], [AtomicU64::new(0), AtomicU64::new(0)],
@@ -547,6 +548,22 @@ impl ShareSpace {
                 [AtomicU64::new(0), AtomicU64::new(0)], [AtomicU64::new(0), AtomicU64::new(0)], [AtomicU64::new(0), AtomicU64::new(0)], [AtomicU64::new(0), AtomicU64::new(0)],
             ],
         }
+    }
+
+    pub fn PrintAddr(&self) {
+        let qInputAddr = &self.QInput as * const _ as u64;
+        let qOutputAddr = &self.QOutput as * const _ as u64;
+        let schedulerAddr = &self.scheduler as * const _ as u64;
+        let configAddr = &self.config as * const _ as u64;
+        let logBufAddr = &self.logBuf as * const _ as u64;
+        let valuesAddr = &self.values as * const _ as u64;
+
+        error!("qInputAddr {:x}, ", qInputAddr);
+        error!("qOutputAddr {:x}, ", qOutputAddr);
+        error!("schedulerAddr {:x}, ", schedulerAddr);
+        error!("configAddr {:x}, ", configAddr);
+        error!("logBufAddr {:x}, ", logBufAddr);
+        error!("valuesAddr {:x}, ", valuesAddr);
     }
 
     pub fn SetValue(&self, cpuId: usize, idx: usize, val: u64) {
@@ -604,7 +621,9 @@ impl ShareSpace {
     }
 
     pub fn ConsumeAndGetAvailableWriteBuf(&self, cnt: usize) -> (u64, usize) {
+        //print!("ConsumeAndGetAvailableWriteBuf1 {}", cnt);
         let mut lock = self.logBuf.lock();
+        //print!("ConsumeAndGetAvailableWriteBuf2 {}", cnt);
         lock.as_mut().unwrap().Consume(cnt);
         let (addr, len) = lock.as_mut().unwrap().GetDataBuf();
         return (addr, len)

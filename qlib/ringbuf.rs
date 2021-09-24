@@ -13,18 +13,19 @@
 // limitations under the License.
 
 use ringbuf::*;
-use spin::Mutex;
+//use spin::Mutex;
 use core::cell::RefCell;
 use core::marker::PhantomData;
 use alloc::collections::vec_deque::VecDeque;
 use core::ops::Deref;
 
 use super::common::*;
+use super::mutex::QMutex;
 
 // multple producer single consumer
 pub struct MpScRing<T> {
     pub consumer: RefCell<Consumer<T>>,
-    pub producer: Mutex<Producer<T>>,
+    pub producer: QMutex<Producer<T>>,
     pub resource_type: PhantomData<T>,
 }
 
@@ -36,7 +37,7 @@ impl <T> MpScRing <T> {
         let (p, c) = r.split();
         return Self {
             consumer: RefCell::new(c),
-            producer: Mutex::new(p),
+            producer: QMutex::new(p),
             resource_type: PhantomData,
         }
     }
@@ -88,7 +89,7 @@ impl <T> MpScRing <T> {
 
 //single producer multple consumer
 pub struct SpMcRing  <T> {
-    pub consumer: Mutex<Consumer<T>>,
+    pub consumer: QMutex<Consumer<T>>,
     pub producer: RefCell<Producer<T>>,
     pub resource_type: PhantomData<T>,
 }
@@ -100,7 +101,7 @@ impl <T> SpMcRing <T> {
         let r = RingBuffer::new(size);
         let (p, c) = r.split();
         return Self {
-            consumer: Mutex::new(c),
+            consumer: QMutex::new(c),
             producer: RefCell::new(p),
             resource_type: PhantomData,
         }
@@ -143,19 +144,19 @@ impl <T> SpMcRing <T> {
     }
 }
 
-pub struct QRingBuf<T:Clone + Copy>(Mutex<VecDeque<T>>);
+pub struct QRingBuf<T:Clone + Copy>(QMutex<VecDeque<T>>);
 
 impl <T:Clone + Copy> Deref for QRingBuf <T> {
-    type Target = Mutex<VecDeque<T>>;
+    type Target = QMutex<VecDeque<T>>;
 
-    fn deref(&self) -> &Mutex<VecDeque<T>> {
+    fn deref(&self) -> &QMutex<VecDeque<T>> {
         &self.0
     }
 }
 
 impl <T:Clone + Copy> QRingBuf <T> {
     pub fn New(size: usize) -> Self {
-        return Self(Mutex::new(VecDeque::with_capacity(size)))
+        return Self(QMutex::new(VecDeque::with_capacity(size)))
     }
 
     pub fn Push(&self, data: &T) -> Result<()> {

@@ -15,7 +15,7 @@
 use core::any::Any;
 use alloc::sync::Arc;
 use spin::RwLock;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::string::String;
@@ -38,6 +38,7 @@ use super::super::super::kernel::waiter::qlock::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::task::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::id_mgr::*;
 
 pub struct SymlinkInternal {
@@ -148,7 +149,7 @@ impl InodeOperations for Symlink {
         let file = FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((flags, None)),
+            flags: QMutex::new((flags, None)),
             offset: QLock::New(0),
             FileOp: Arc::new(SymlinkFileOperations {}),
         };

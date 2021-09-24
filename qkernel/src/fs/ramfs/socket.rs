@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::string::String;
-use spin::Mutex;
+//use spin::Mutex;
 use core::any::Any;
 use alloc::vec::Vec;
 use alloc::sync::Arc;
@@ -23,6 +23,7 @@ use super::super::host::hostinodeop::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::auth::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::super::kernel::time::*;
 use super::super::super::kernel::waiter::*;
@@ -125,7 +126,7 @@ impl InodeOperations for SocketInodeOps {
         let f = FileInternal {
             UniqueId: UniqueID(),
             Dirent: dirent.clone(),
-            flags: Mutex::new((flags, None)),
+            flags: QMutex::new((flags, None)),
             offset: QLock::New(0),
             FileOp: Arc::new(fops),
         };

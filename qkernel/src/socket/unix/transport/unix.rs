@@ -15,13 +15,14 @@
 use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
 
 use super::super::super::super::kernel::waiter::*;
 use super::super::super::super::tcpip::tcpip::*;
 use super::super::super::super::qlib::common::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::mem::seq::*;
 use super::super::super::super::uid::*;
@@ -671,12 +672,12 @@ pub struct StreamQueueReceiverInternal {
 }
 
 #[derive(Clone)]
-pub struct StreamQueueReceiver(Arc<Mutex<StreamQueueReceiverInternal>>);
+pub struct StreamQueueReceiver(Arc<QMutex<StreamQueueReceiverInternal>>);
 
 impl Deref for StreamQueueReceiver {
-    type Target = Arc<Mutex<StreamQueueReceiverInternal>>;
+    type Target = Arc<QMutex<StreamQueueReceiverInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<StreamQueueReceiverInternal>> {
+    fn deref(&self) -> &Arc<QMutex<StreamQueueReceiverInternal>> {
         &self.0
     }
 }
@@ -700,7 +701,7 @@ impl StreamQueueReceiver {
             addr: SockAddrUnix::default(),
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 }
 
@@ -1030,12 +1031,12 @@ impl BaseEndpointInternal {
 }
 
 #[derive(Default, Clone)]
-pub struct BaseEndpoint(pub Arc<Mutex<BaseEndpointInternal>>);
+pub struct BaseEndpoint(pub Arc<QMutex<BaseEndpointInternal>>);
 
 impl Deref for BaseEndpoint {
-    type Target = Arc<Mutex<BaseEndpointInternal>>;
+    type Target = Arc<QMutex<BaseEndpointInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<BaseEndpointInternal>> {
+    fn deref(&self) -> &Arc<QMutex<BaseEndpointInternal>> {
         &self.0
     }
 }
@@ -1103,7 +1104,7 @@ impl BaseEndpoint {
             ..Default::default()
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     pub fn NewWithHostfd(hostfd: i32) -> Self {
@@ -1112,7 +1113,7 @@ impl BaseEndpoint {
             ..Default::default()
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     // pass the ioctl to the shadow hostfd

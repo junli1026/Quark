@@ -419,6 +419,7 @@ pub extern fn PageFaultHandler(sf: &mut ExceptionStackFrame, errorCode: u64) {
     unsafe{ llvm_asm!("movw $0, %ss" :: "r" (ss) : "memory");}
 
     let currTask = Task::Current();
+    currTask.Check();
 
     // is this call from user
     let fromUser = if sf.ss & 0x3 != 0 {
@@ -434,10 +435,12 @@ pub extern fn PageFaultHandler(sf: &mut ExceptionStackFrame, errorCode: u64) {
     };
 
     if !fromUser {
-        print!("Get pagefault from kernel ... {:#x?}/registers is {:#x?}", sf, currTask.GetPtRegs());
+        let mut str = format!("Get pagefault from kernel ...cr2 {:x}, cr3 {:x} sf {:#x?} \n registers is {:#x?} \n", cr2, cr3, sf, currTask.GetPtRegs());
         for i in 0..super::CPU_LOCAL.len() {
-            print!("CPU#{} is {:#x?}", i, super::CPU_LOCAL[i]);
+            str += &format!("CPU#{} is {:#x?}\n", i, super::CPU_LOCAL[i]);
         }
+
+        print!("{}", str);
         /*backtracer::trace1(sf.ip, sf.sp, pt.rbp, &mut |frame| {
             print!("pagefault frame is {:#x?}", frame);
             true

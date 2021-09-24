@@ -21,10 +21,11 @@ pub mod fs;
 pub mod tty;
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 
+use super::super::qlib::mutex::*;
 use super::filesystems::*;
 
 pub fn Init() {
-    RegisterFilesystem(&Arc::new(Mutex::new(self::fs::DevTmpfs {})));
+    RegisterFilesystem(&Arc::new(QMutex::new(self::fs::DevTmpfs {})));
 }

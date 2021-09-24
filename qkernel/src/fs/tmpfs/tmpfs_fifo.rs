@@ -15,13 +15,14 @@
 use alloc::string::String;
 use alloc::vec::Vec;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::any::Any;
 
 use socket::unix::transport::unix::BoundEndpoint;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::device::*;
 use super::super::super::kernel::time::*;
 use super::super::super::kernel::pipe::pipe::*;
@@ -36,7 +37,7 @@ use super::super::dirent::*;
 use super::super::host::hostinodeop::*;
 use super::tmpfs_dir::*;
 
-pub fn NewTmpfsFifoInode(task: &Task, perms: &FilePermissions, msrc: &Arc<Mutex<MountSource>>) -> Result<Inode> {
+pub fn NewTmpfsFifoInode(task: &Task, perms: &FilePermissions, msrc: &Arc<QMutex<MountSource>>) -> Result<Inode> {
     // First create a pipe.
     let pipe = Pipe::New(task, true, DEFAULT_PIPE_SIZE, MemoryDef::PAGE_SIZE as usize);
 

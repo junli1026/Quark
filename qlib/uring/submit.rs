@@ -2,6 +2,7 @@ use core::sync::atomic;
 use core::{ptr};
 
 use super::super::linux_def::IoVec;
+use super::super::linux_def::QOrdering;
 use super::super::common::*;
 use super::register::execute;
 use super::register::Probe;
@@ -37,7 +38,7 @@ impl<'a> Submitter<'a> {
 
     pub fn sq_len(&self) -> usize {
         unsafe {
-            let head = (*self.sq_head).load(atomic::Ordering::Acquire);
+            let head = (*self.sq_head).load(QOrdering::ACQUIRE);
             let tail = unsync_load(self.sq_tail);
 
             tail.wrapping_sub(head) as usize
@@ -46,7 +47,7 @@ impl<'a> Submitter<'a> {
 
     pub fn sq_need_wakeup(&self) -> bool {
         unsafe {
-            (*self.sq_flags).load(atomic::Ordering::Acquire) & sys::IORING_SQ_NEED_WAKEUP != 0
+            (*self.sq_flags).load(QOrdering::ACQUIRE) & sys::IORING_SQ_NEED_WAKEUP != 0
         }
     }
 

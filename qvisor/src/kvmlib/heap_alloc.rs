@@ -1,12 +1,17 @@
-use super::qlib::mem::list_allocator::*;
 use libc;
-use core::sync::atomic::Ordering;
 use core::ptr;
+
+use super::qlib::mem::list_allocator::*;
+use super::qlib::mutex::*;
 
 
 impl OOMHandler for ListAllocator {
     fn handleError(&self, _a:u64, _b:u64) {
         panic!("qvisor OOM: Heap allocator fails to allocate memory block");
+    }
+
+    fn log(&self, a: u64, b: u64) {
+        error!("ListAllocator::Log {:x}/{:x}", a, b);
     }
 }
 
@@ -19,8 +24,13 @@ impl ListAllocator {
             if address == libc::MAP_FAILED {
                 panic!("mmap: failed to get mapped memory area for heap");
             }
-            self.heap.lock().init(address as usize, 1<<29 as usize);
+            self.Add(address as usize, 1<<29 as usize);
         }
-        self.initialized.store(true, Ordering::Relaxed);
+    }
+}
+
+impl<T: ?Sized> QMutex<T> {
+    pub fn Log(&self, a: u64, b: u64) {
+        error!("ListAllocator::Log {:x}/{:x}", a, b);
     }
 }

@@ -16,11 +16,12 @@ use alloc::collections::btree_map::BTreeMap;
 use core::ops::Bound::Included;
 use alloc::vec::Vec;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::common::*;
 use super::super::linux_def::*;
+use super::super::mutex::*;
 use super::id::*;
 
 #[derive(Default, Debug)]
@@ -58,12 +59,12 @@ impl UserNameSpaceInternal {
 }
 
 #[derive(Clone, Default, Debug)]
-pub struct UserNameSpace(pub Arc<Mutex<UserNameSpaceInternal>>);
+pub struct UserNameSpace(pub Arc<QMutex<UserNameSpaceInternal>>);
 
 impl Deref for UserNameSpace {
-    type Target = Arc<Mutex<UserNameSpaceInternal>>;
+    type Target = Arc<QMutex<UserNameSpaceInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<UserNameSpaceInternal>> {
+    fn deref(&self) -> &Arc<QMutex<UserNameSpaceInternal>> {
         &self.0
     }
 }
@@ -87,7 +88,7 @@ impl UserNameSpace {
             gidMapToParent: IdMap::All(),
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     /*pub fn SetUIDMap(&mut self, task: &Task, entries: &Vec<IdMapEntry>) -> Result<()> {

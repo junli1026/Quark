@@ -14,7 +14,7 @@
 
 use alloc::sync::Arc;
 use spin::RwLock;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
 use alloc::string::String;
@@ -25,6 +25,7 @@ use super::super::host::hostinodeop::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::device::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::super::kernel::time::*;
 use super::super::super::kernel::waiter::*;
@@ -74,7 +75,7 @@ pub fn NewMasterNode(task: &Task, d: &DirInodeOperations, owner: &FileOwner, p: 
         ..Default::default()
     };
 
-    return Inode(Arc::new(Mutex::new(inodeInternal)))
+    return Inode(Arc::new(QMutex::new(inodeInternal)))
 }
 
 pub struct MasterInodeOperationsInternal {

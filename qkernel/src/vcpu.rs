@@ -15,7 +15,6 @@
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering;
 use lazy_static::lazy_static;
-use spin::Mutex;
 
 use super::asm::*;
 use super::SHARESPACE;
@@ -23,7 +22,6 @@ use super::IOURING;
 use super::qlib::vcpu_mgr::*;
 
 lazy_static! {
-    pub static ref LAST_REBALANCE: Mutex<i64> = Mutex::new(0);
     pub static ref VCPU_COUNT : AtomicUsize = AtomicUsize::new(0);
     pub static ref CPU_LOCAL: &'static [CPULocal] = &SHARESPACE.scheduler.VcpuArr;
 }

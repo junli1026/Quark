@@ -50,6 +50,7 @@ fn FutexWaitAbsolute(task: &mut Task, realtime: bool, ts: Option<Timespec>, addr
     let waitEntry = task.blocker.generalEntry.clone();
     task.futexMgr.WaitPrepare(&waitEntry, task, addr, private, val, mask)?;
 
+    debug!("FutexWaitAbsolute 1");
     let res = match ts {
         None => task.blocker.BlockWithRealTimer(true, None),
         Some(ts) => {
@@ -62,6 +63,7 @@ fn FutexWaitAbsolute(task: &mut Task, realtime: bool, ts: Option<Timespec>, addr
         }
     };
 
+    debug!("FutexWaitAbsolute 2");
     task.futexMgr.WaitComplete(&waitEntry);
     match res {
         Err(Error::ErrInterrupted) => return Err(Error::SysError(SysErr::ERESTARTSYS)),
@@ -84,7 +86,9 @@ fn FutexWaitDuration(task: &mut Task, dur: Option<Duration>, addr: u64, private:
     let waitEntry = task.blocker.generalEntry.clone();
     task.futexMgr.WaitPrepare(&waitEntry, task, addr, private, val, mask)?;
 
+    debug!("FutexWaitDuration 1");
     let (remain, res) = task.blocker.BlockWithMonoTimeout(true, dur);
+    debug!("FutexWaitDuration 2");
     task.futexMgr.WaitComplete(&waitEntry);
     match res {
         Ok(_) => return Ok(0),
@@ -181,7 +185,7 @@ pub fn SysFutex(task: &mut Task, args: &SyscallArguments) -> Result<i64> {
 
             match cmd {
                 FUTEX_WAIT => {
-                    //info!("FUTEX_WAIT...");
+                    debug!("FUTEX_WAIT...");
                     // WAIT uses a relative timeout.
                     let mask = !0;
                     let timeoutDur = if forever {
@@ -192,7 +196,7 @@ pub fn SysFutex(task: &mut Task, args: &SyscallArguments) -> Result<i64> {
                     return FutexWaitDuration(task, timeoutDur, addr, private, val as u32, mask);
                 }
                 FUTEX_WAIT_BITSET => {
-                    //info!("FUTEX_WAIT_BITSET...");
+                    debug!("FUTEX_WAIT_BITSET...");
                     // WAIT_BITSET uses an absolute timeout which is either
                     // CLOCK_MONOTONIC or CLOCK_REALTIME.
                     if mask == 0 {

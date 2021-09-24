@@ -14,7 +14,7 @@
 
 use alloc::sync::Arc;
 use alloc::sync::Weak;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::ToString;
 use alloc::string::String;
 use core::any::Any;
@@ -24,6 +24,7 @@ use alloc::vec::Vec;
 use socket::unix::transport::unix::BoundEndpoint;
 use super::super::super::guestfdnotifier::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::range::*;
 use super::super::super::memmgr::mapping_set::*;
 use super::super::super::qlib::mem::areaset::*;
@@ -141,18 +142,18 @@ impl Default for MappableInternal {
 }
 
 #[derive(Default, Clone)]
-pub struct Mappable(Arc<Mutex<MappableInternal>>);
+pub struct Mappable(Arc<QMutex<MappableInternal>>);
 
 impl Deref for Mappable {
-    type Target = Arc<Mutex<MappableInternal>>;
+    type Target = Arc<QMutex<MappableInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<MappableInternal>> {
+    fn deref(&self) -> &Arc<QMutex<MappableInternal>> {
         &self.0
     }
 }
 
 pub struct HostInodeOpIntern {
-    pub mops: Arc<Mutex<MountSourceOperations>>,
+    pub mops: Arc<QMutex<MountSourceOperations>>,
     //this should be SuperOperations
     pub HostFd: i32,
     pub WouldBlock: bool,
@@ -172,7 +173,7 @@ pub struct HostInodeOpIntern {
 impl Default for HostInodeOpIntern {
     fn default() -> Self {
         return Self {
-            mops: Arc::new(Mutex::new(SimpleMountSourceOperations::default())),
+            mops: Arc::new(QMutex::new(SimpleMountSourceOperations::default())),
             HostFd: -1,
             WouldBlock: false,
             Writeable: false,
@@ -198,7 +199,7 @@ impl Drop for HostInodeOpIntern {
 }
 
 impl HostInodeOpIntern {
-    pub fn New(mops: &Arc<Mutex<MountSourceOperations>>, fd: i32, wouldBlock: bool, fstat: &LibcStat, writeable: bool) -> Self {
+    pub fn New(mops: &Arc<QMutex<MountSourceOperations>>, fd: i32, wouldBlock: bool, fstat: &LibcStat, writeable: bool) -> Self {
         let mut ret = Self {
             mops: mops.clone(),
             HostFd: fd,
@@ -428,7 +429,7 @@ impl HostInodeOpIntern {
 }
 
 #[derive(Clone)]
-pub struct HostInodeOpWeak(pub Weak<Mutex<HostInodeOpIntern>>);
+pub struct HostInodeOpWeak(pub Weak<QMutex<HostInodeOpIntern>>);
 
 impl HostInodeOpWeak {
     pub fn Upgrade(&self) -> Option<HostInodeOp> {
@@ -442,7 +443,7 @@ impl HostInodeOpWeak {
 }
 
 #[derive(Clone)]
-pub struct HostInodeOp(pub Arc<Mutex<HostInodeOpIntern>>);
+pub struct HostInodeOp(pub Arc<QMutex<HostInodeOpIntern>>);
 
 impl PartialEq for HostInodeOp {
     fn eq(&self, other: &Self) -> bool {
@@ -454,21 +455,21 @@ impl Eq for HostInodeOp {}
 
 impl Default for HostInodeOp {
     fn default() -> Self {
-        return Self(Arc::new(Mutex::new(HostInodeOpIntern::default())))
+        return Self(Arc::new(QMutex::new(HostInodeOpIntern::default())))
     }
 }
 
 impl Deref for HostInodeOp {
-    type Target = Arc<Mutex<HostInodeOpIntern>>;
+    type Target = Arc<QMutex<HostInodeOpIntern>>;
 
-    fn deref(&self) -> &Arc<Mutex<HostInodeOpIntern>> {
+    fn deref(&self) -> &Arc<QMutex<HostInodeOpIntern>> {
         &self.0
     }
 }
 
 impl HostInodeOp {
-    pub fn New(mops: &Arc<Mutex<MountSourceOperations>>, fd: i32, wouldBlock: bool, fstat: &LibcStat, writeable: bool) -> Self {
-        let intern = Arc::new(Mutex::new(HostInodeOpIntern::New(mops, fd, wouldBlock, fstat, writeable)));
+    pub fn New(mops: &Arc<QMutex<MountSourceOperations>>, fd: i32, wouldBlock: bool, fstat: &LibcStat, writeable: bool) -> Self {
+        let intern = Arc::new(QMutex::new(HostInodeOpIntern::New(mops, fd, wouldBlock, fstat, writeable)));
 
         let ret = Self(intern);
         AddFD(fd, &ret);
@@ -489,7 +490,7 @@ impl HostInodeOp {
         }
 
         let msrc = MountSource::NewHostMountSource(&"/".to_string(), &ROOT_OWNER, &WhitelistFileSystem::New(), &MountSourceFlags::default(), false);
-        let intern = Arc::new(Mutex::new(HostInodeOpIntern::New(&msrc.MountSourceOperations.clone(), fd, false, &fstat, true)));
+        let intern = Arc::new(QMutex::new(HostInodeOpIntern::New(&msrc.MountSourceOperations.clone(), fd, false, &fstat, true)));
 
         let ret = Self(intern);
         return Ok(ret)
@@ -543,7 +544,7 @@ impl HostInodeOp {
     pub fn GetHostFileOp(&self, _task: &Task) -> Arc<HostFileOp> {
         let hostFileOp = HostFileOp {
             InodeOp: self.clone(),
-            DirCursor: Mutex::new("".to_string()),
+            DirCursor: QMutex::new("".to_string()),
             //Buf: HostFileBuf::None,
         };
         return Arc::new(hostFileOp)

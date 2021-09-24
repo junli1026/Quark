@@ -16,12 +16,13 @@ use alloc::sync::Arc;
 use alloc::string::String;
 use alloc::vec::Vec;
 use core::any::Any;
-use spin::Mutex;
+//use spin::Mutex;
 
 use socket::unix::transport::unix::BoundEndpoint;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::threadmgr::thread::*;
 use super::super::super::kernel::time::*;
 use super::super::super::task::*;
@@ -49,7 +50,7 @@ pub struct SymlinkNode<T: 'static + ReadLinkNode> {
 }
 
 impl <T: 'static + ReadLinkNode> SymlinkNode<T> {
-    pub fn New(task: &Task, msrc: &Arc<Mutex<MountSource>>, node: T, thread: Option<Thread>) -> Inode {
+    pub fn New(task: &Task, msrc: &Arc<QMutex<MountSource>>, node: T, thread: Option<Thread>) -> Inode {
         let link = Self {
             link: Symlink::New(task, &ROOT_OWNER, ""),
             node: node,
@@ -104,7 +105,7 @@ impl <T: 'static + ReadLinkNode> InodeOperations for SymlinkNode<T> {
         return self.link.CreateFifo(task, dir, name, perms);
     }
 
-    //fn RemoveDirent(&mut self, dir: &mut InodeStruStru, remove: &Arc<Mutex<Dirent>>) -> Result<()> ;
+    //fn RemoveDirent(&mut self, dir: &mut InodeStruStru, remove: &Arc<QMutex<Dirent>>) -> Result<()> ;
     fn Remove(&self, task: &Task, dir: &mut Inode, name: &str) -> Result<()> {
         return self.link.Remove(task, dir, name);
     }

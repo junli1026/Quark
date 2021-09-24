@@ -19,7 +19,7 @@ use core::sync::atomic::AtomicI64;
 use core::sync::atomic::Ordering;
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::*;
 use alloc::boxed::Box;
 
@@ -37,6 +37,7 @@ use super::super::super::kernel::waiter::*;
 use super::super::super::kernel::time::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux_def::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux::socket::*;
 use super::super::super::task::*;
 //use super::super::super::qlib::mem::io::*;
@@ -69,7 +70,7 @@ pub struct UnixSocketOperations {
     pub stype: i32,
     pub send: AtomicI64,
     pub recv: AtomicI64,
-    pub name: Mutex<Option<Vec<u8>>>,
+    pub name: QMutex<Option<Vec<u8>>>,
     pub hostfd: i32,
 }
 
@@ -80,7 +81,7 @@ impl UnixSocketOperations {
             stype: stype,
             send: AtomicI64::new(0),
             recv: AtomicI64::new(0),
-            name: Mutex::new(None),
+            name: QMutex::new(None),
             hostfd: hostfd,
         };
 

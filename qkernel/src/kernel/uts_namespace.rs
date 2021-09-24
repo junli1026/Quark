@@ -15,10 +15,11 @@
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 
 use super::super::qlib::auth::userns::*;
+use super::super::qlib::mutex::*;
 
 #[derive(Default)]
 pub struct UTSNamespaceInternal {
@@ -28,12 +29,12 @@ pub struct UTSNamespaceInternal {
 }
 
 #[derive(Clone, Default)]
-pub struct UTSNamespace(Arc<Mutex<UTSNamespaceInternal>>);
+pub struct UTSNamespace(Arc<QMutex<UTSNamespaceInternal>>);
 
 impl Deref for UTSNamespace {
-    type Target = Arc<Mutex<UTSNamespaceInternal>>;
+    type Target = Arc<QMutex<UTSNamespaceInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<UTSNamespaceInternal>> {
+    fn deref(&self) -> &Arc<QMutex<UTSNamespaceInternal>> {
         &self.0
     }
 }
@@ -46,7 +47,7 @@ impl UTSNamespace {
             userns: userns
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     pub fn HostName(&self) -> String {
@@ -77,6 +78,6 @@ impl UTSNamespace {
             userns: userns.clone(),
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 }

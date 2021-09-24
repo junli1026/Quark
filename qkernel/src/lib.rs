@@ -415,7 +415,6 @@ pub extern fn rust_main(heapStart: u64, heapLen: u64, id: u64, vdsoParamAddr: u6
 
     if id == 1 {
         error!("heap start is {:x}/{:x}", heapStart, heapStart + heapLen);
-
         if autoStart {
             CreateTask(StartRootContainer, ptr::null(), false);
         }
@@ -462,10 +461,20 @@ pub fn StartRootProcess() {
     CreateTask(StartRootContainer, ptr::null(), false);
 }
 
+fn PrintAddress() {
+    error!("DUMMY_TASK {:x}", &self::task::DUMMY_TASK as * const _ as u64);
+    error!("CPU_LOCAL {:x}", &self::vcpu::CPU_LOCAL as * const _ as u64);
+    error!("ControlMsg {:x}", &self::boot::controller::MSG as * const _ as u64);
+    error!("SETABLE_LIMITS {:x}", &self::syscalls::sys_rlimit::SETABLE_LIMITS as * const _ as u64);
+}
+
 fn StartRootContainer(_para: *const u8) {
     self::Init();
     info!("StartRootContainer ....");
     let task = Task::Current();
+
+    //PrintAddress();
+    //ALLOCATOR.PrintAddr();
 
     let process = {
         defer!(info!("after process"));

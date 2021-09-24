@@ -2,6 +2,8 @@
 
 use core::sync::atomic;
 
+use super::super::linux_def::QOrdering;
+
 use super::sys;
 use super::util::{unsync_load, Mmap};
 
@@ -76,13 +78,13 @@ impl CompletionQueue {
     /// If queue is full, the new event maybe dropped.
     /// This value records number of dropped events.
     pub fn overflow(&self) -> u32 {
-        unsafe { (*self.overflow).load(atomic::Ordering::SeqCst) }
+        unsafe { (*self.overflow).load(QOrdering::SEQ_CST) }
     }
 
     #[cfg(feature = "unstable")]
     pub fn eventfd_disabled(&self) -> bool {
         unsafe {
-            (*self.flags).load(atomic::Ordering::Acquire) & sys::IORING_CQ_EVENTFD_DISABLED != 0
+            (*self.flags).load(QOrdering::ACQUIRE) & sys::IORING_CQ_EVENTFD_DISABLED != 0
         }
     }
 
@@ -95,7 +97,7 @@ impl CompletionQueue {
     pub fn len(&self) -> usize {
         unsafe {
             let head = unsync_load(self.head);
-            let tail = (*self.tail).load(atomic::Ordering::Acquire);
+            let tail = (*self.tail).load(QOrdering::ACQUIRE);
 
             tail.wrapping_sub(head) as usize
         }
@@ -114,12 +116,12 @@ impl CompletionQueue {
     pub fn next(&mut self) -> Option<Entry> {
         unsafe {
             let head = unsync_load(self.head);
-            let tail = (*self.tail).load(atomic::Ordering::Acquire);
+            let tail = (*self.tail).load(QOrdering::ACQUIRE);
             let ring_mask = self.ring_mask.read();
 
             if head != tail {
                 let entry = self.cqes.add((head & ring_mask) as usize);
-                (*self.head).store(head.wrapping_add(1), atomic::Ordering::Release);
+                (*self.head).store(head.wrapping_add(1), QOrdering::RELEASE);
                 Some(Entry(*entry))
             } else {
                 None
@@ -132,7 +134,7 @@ impl CompletionQueue {
         unsafe {
             AvailableQueue {
                 head: unsync_load(self.head),
-                tail: (*self.tail).load(atomic::Ordering::Acquire),
+                tail: (*self.tail).load(QOrdering::ACQUIRE),
                 ring_mask: self.ring_mask.read(),
                 ring_entries: self.ring_entries.read(),
                 queue: self,
@@ -156,8 +158,8 @@ impl AvailableQueue<'_> {
     /// Sync queue
     pub fn sync(&mut self) {
         unsafe {
-            (*self.queue.head).store(self.head, atomic::Ordering::Release);
-            self.tail = (*self.queue.tail).load(atomic::Ordering::Acquire);
+            (*self.queue.head).store(self.head, QOrdering::RELEASE);
+            self.tail = (*self.queue.tail).load(QOrdering::ACQUIRE);
         }
     }
 
@@ -199,7 +201,7 @@ impl Iterator for AvailableQueue<'_> {
 impl Drop for AvailableQueue<'_> {
     fn drop(&mut self) {
         unsafe {
-            (*self.queue.head).store(self.head, atomic::Ordering::Release);
+            (*self.queue.head).store(self.head, QOrdering::RELEASE);
         }
     }
 }

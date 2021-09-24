@@ -13,12 +13,13 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::ToString;
 
 use super::super::super::super::qlib::common::*;
 use super::super::super::super::qlib::linux_def::*;
 use super::super::super::super::qlib::auth::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::fsutil::file::readonly_file::*;
 use super::super::super::fsutil::inode::simple_file_inode::*;
 use super::super::super::super::task::*;
@@ -31,7 +32,7 @@ use super::super::super::inode::*;
 use super::super::super::super::threadmgr::thread::*;
 use super::super::inode::*;
 
-pub fn NewIdMap(task: &Task, thread: &Thread, msrc: &Arc<Mutex<MountSource>>, gids: bool) -> Inode {
+pub fn NewIdMap(task: &Task, thread: &Thread, msrc: &Arc<QMutex<MountSource>>, gids: bool) -> Inode {
     let v = NewIdMapSimpleFileInode(task,
                                     thread,
                                     &ROOT_OWNER,

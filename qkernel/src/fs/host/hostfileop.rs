@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::String;
 use alloc::string::ToString;
 use alloc::collections::btree_map::BTreeMap;
@@ -23,6 +23,7 @@ use core::any::Any;
 use super::super::super::guestfdnotifier::*;
 use super::super::super::kernel::waiter::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::qlib::qmsg::qcall::*;
 use super::super::super::util::cstring::*;
@@ -51,12 +52,12 @@ use super::dirent::*;
 
 pub enum HostFileBuf {
     None,
-    TTYOut(Arc<Mutex<ByteStream>>),
+    TTYOut(Arc<QMutex<ByteStream>>),
 }
 
 pub struct HostFileOp {
     pub InodeOp: HostInodeOp,
-    pub DirCursor: Mutex<String>,
+    pub DirCursor: QMutex<String>,
     //pub Buf: HostFileBuf,
 }
 

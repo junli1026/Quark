@@ -1052,6 +1052,6 @@ impl ShareSpace {
 
 impl <T: ?Sized> QMutex<T> {
     pub fn GetID() -> u64 {
-        return Task::Current().taskId;
+        return Task::TaskAddress();
     }
 }

@@ -13,13 +13,14 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::cell::*;
 
 use super::super::futex::*;
 use super::super::epoll::epoll_entry::*;
 use super::super::fasync::*;
+use super::super::super::qlib::mutex::*;
 use super::waiter::*;
 use super::*;
 
@@ -88,12 +89,12 @@ pub struct EntryInternal {
 }
 
 #[derive(Default, Clone)]
-pub struct WaitEntry(Arc<Mutex<EntryInternal>>);
+pub struct WaitEntry(Arc<QMutex<EntryInternal>>);
 
 impl Deref for WaitEntry {
-    type Target = Arc<Mutex<EntryInternal>>;
+    type Target = Arc<QMutex<EntryInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<EntryInternal>> {
+    fn deref(&self) -> &Arc<QMutex<EntryInternal>> {
         &self.0
     }
 }
@@ -115,7 +116,7 @@ impl WaitEntry {
             context: WaitContext::None,
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     pub fn Timeout(&self) {
@@ -137,7 +138,7 @@ impl WaitEntry {
             context: WaitContext::ThreadContext(RefCell::new(context)),
         };
 
-        return Self(Arc::new(Mutex::new(internal)))
+        return Self(Arc::new(QMutex::new(internal)))
     }
 
     pub fn ID(&self) -> WaiterID {

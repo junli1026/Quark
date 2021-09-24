@@ -16,7 +16,7 @@ use alloc::sync::Arc;
 use alloc::sync::Weak;
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::collections::btree_set::BTreeSet;
 use core::ops::Deref;
 use core::cmp::*;
@@ -25,6 +25,7 @@ use super::super::SignalDef::*;
 use super::super::memmgr::mm::*;
 use super::super::qlib::linux_def::*;
 use super::super::qlib::usage::io::*;
+use super::super::qlib::mutex::*;
 use super::super::fs::mount::*;
 use super::super::kernel::kernel::*;
 use super::super::kernel::fs_context::*;
@@ -340,7 +341,7 @@ impl ThreadInternal {
 #[derive(Default)]
 pub struct ThreadWeak {
     pub uid: UniqueID,
-    pub data: Weak<Mutex<ThreadInternal>>,
+    pub data: Weak<QMutex<ThreadInternal>>,
 }
 
 impl ThreadWeak {
@@ -360,7 +361,7 @@ impl ThreadWeak {
 //#[derive(Default)]
 pub struct Thread {
     pub uid: UniqueID,
-    pub data: Arc<Mutex<ThreadInternal>>,
+    pub data: Arc<QMutex<ThreadInternal>>,
 }
 
 impl Clone for Thread {
@@ -373,9 +374,9 @@ impl Clone for Thread {
 }
 
 impl Deref for Thread {
-    type Target = Arc<Mutex<ThreadInternal>>;
+    type Target = Arc<QMutex<ThreadInternal>>;
 
-    fn deref(&self) -> &Arc<Mutex<ThreadInternal>> {
+    fn deref(&self) -> &Arc<QMutex<ThreadInternal>> {
         &self.data
     }
 }

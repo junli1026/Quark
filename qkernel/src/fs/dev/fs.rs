@@ -13,11 +13,12 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::Mutex;
+//use spin::Mutex;
 use alloc::string::String;
 use alloc::string::ToString;
 
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::task::*;
 use super::super::filesystems::*;
 use super::super::inode::*;
@@ -39,7 +40,7 @@ impl Filesystem for DevTmpfs {
         //let options = FileSystem::GenericMountSourceOptions(data);
 
         let mountSource = MountSource::NewCachingMountSource(self, flags);
-        let inode = NewDev(task, &Arc::new(Mutex::new(mountSource)));
+        let inode = NewDev(task, &Arc::new(QMutex::new(mountSource)));
         return Ok(inode)
     }
 

@@ -22,10 +22,11 @@ pub mod slave;
 pub mod fs;
 
 use alloc::sync::Arc;
-use spin::Mutex;
+use super::super::qlib::mutex::*;
+//use spin::Mutex;
 
 use super::filesystems::*;
 
 pub fn Init() {
-    RegisterFilesystem(&Arc::new(Mutex::new(self::fs::PtsTmpfs {})));
+    RegisterFilesystem(&Arc::new(QMutex::new(self::fs::PtsTmpfs {})));
 }

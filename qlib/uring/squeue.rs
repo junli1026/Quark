@@ -4,6 +4,7 @@ use core::sync::atomic;
 
 use super::sys;
 use super::util::{unsync_load, Mmap};
+use super::super::linux_def::QOrdering;
 
 use bitflags::bitflags;
 
@@ -126,16 +127,16 @@ impl SubmissionQueue {
     }
 
     pub fn need_wakeup(&self) -> bool {
-        unsafe { (*self.flags).load(atomic::Ordering::Acquire) & sys::IORING_SQ_NEED_WAKEUP != 0 }
+        unsafe { (*self.flags).load(QOrdering::ACQUIRE) & sys::IORING_SQ_NEED_WAKEUP != 0 }
     }
 
     pub fn dropped(&self) -> u32 {
-        unsafe { (*self.dropped).load(atomic::Ordering::Acquire) }
+        unsafe { (*self.dropped).load(QOrdering::ACQUIRE) }
     }
 
     #[cfg(feature = "unstable")]
     pub fn cq_overflow(&self) -> bool {
-        unsafe { (*self.flags).load(atomic::Ordering::Acquire) & sys::IORING_SQ_CQ_OVERFLOW != 0 }
+        unsafe { (*self.flags).load(QOrdering::ACQUIRE) & sys::IORING_SQ_CQ_OVERFLOW != 0 }
     }
 
     #[inline]
@@ -146,7 +147,7 @@ impl SubmissionQueue {
     #[inline]
     pub fn len(&self) -> usize {
         unsafe {
-            let head = (*self.head).load(atomic::Ordering::Acquire);
+            let head = (*self.head).load(QOrdering::ACQUIRE);
             let tail = unsync_load(self.tail);
 
             tail.wrapping_sub(head) as usize
@@ -167,7 +168,7 @@ impl SubmissionQueue {
     pub fn available(&mut self) -> AvailableQueue<'_> {
         unsafe {
             AvailableQueue {
-                head: (*self.head).load(atomic::Ordering::Acquire),
+                head: (*self.head).load(QOrdering::ACQUIRE),
                 tail: unsync_load(self.tail),
                 ring_mask: self.ring_mask.read(),
                 ring_entries: self.ring_entries.read(),
@@ -181,8 +182,8 @@ impl AvailableQueue<'_> {
     /// Sync queue
     pub fn sync(&mut self) {
         unsafe {
-            (*self.queue.tail).store(self.tail, atomic::Ordering::Release);
-            self.head = (*self.queue.head).load(atomic::Ordering::Acquire);
+            (*self.queue.tail).store(self.tail, QOrdering::RELEASE);
+            self.head = (*self.queue.head).load(QOrdering::ACQUIRE);
         }
     }
 
@@ -228,7 +229,7 @@ impl AvailableQueue<'_> {
 impl Drop for AvailableQueue<'_> {
     fn drop(&mut self) {
         unsafe {
-            (*self.queue.tail).store(self.tail, atomic::Ordering::Release);
+            (*self.queue.tail).store(self.tail, QOrdering::RELEASE);
         }
     }
 }

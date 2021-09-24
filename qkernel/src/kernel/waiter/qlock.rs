@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use core::ops::Deref;
 use core::ops::DerefMut;
 use core::cell::UnsafeCell;
 
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::queue::*;
 use super::*;
 
 #[derive(Default)]
 pub struct QLock <T: ?Sized> {
-    pub locked: Mutex<bool>,
+    pub locked: QMutex<bool>,
     pub queue: Queue,
     pub data: UnsafeCell<T>,
 }
@@ -32,14 +33,14 @@ pub struct QLockGuard <'a, T: ?Sized + 'a> {
     pub lock: &'a QLock<T>
 }
 
-// Same unsafe impls as `std::sync::Mutex`
+// Same unsafe impls as `std::sync::QMutex`
 unsafe impl<T: ?Sized + Send> Sync for QLock<T> {}
 unsafe impl<T: ?Sized + Send> Send for QLock<T> {}
 
 impl <T> QLock <T> {
     pub fn New(data: T) -> Self {
         return Self {
-            locked: Mutex::new(false),
+            locked: QMutex::new(false),
             queue: Queue::default(),
             data: UnsafeCell::new(data),
         }

@@ -15,13 +15,14 @@
 use core::alloc::{GlobalAlloc, Layout};
 use core::ops::Deref;
 use buddy_system_allocator::Heap;
-use spin::Mutex;
+//use spin::Mutex;
 use core::cmp::max;
 use core::mem::size_of;
 use core::ptr::NonNull;
 
 use super::super::asm::*;
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::*;
 
 pub const BUF_CNT: usize = 16;
 pub const CLASS_CNT : usize = 32;
@@ -267,12 +268,12 @@ pub struct StackHeapInternal {
     pub free    : usize,
 }
 
-pub struct StackHeap(Mutex<StackHeapInternal>);
+pub struct StackHeap(QMutex<StackHeapInternal>);
 
 impl Deref for StackHeap {
-    type Target = Mutex<StackHeapInternal>;
+    type Target = QMutex<StackHeapInternal>;
 
-    fn deref(&self) -> &Mutex<StackHeapInternal> {
+    fn deref(&self) -> &QMutex<StackHeapInternal> {
         &self.0
     }
 }
@@ -300,7 +301,7 @@ impl StackHeap {
             free: 0,
         };
 
-        return Self(Mutex::new(internal))
+        return Self(QMutex::new(internal))
     }
 
     pub fn AddToHead(&self, start: usize, end: usize) {
@@ -489,12 +490,12 @@ pub struct BufHeapInternal {
     pub heap: Heap<ORDER>,
 }
 
-pub struct BufHeap(Mutex<BufHeapInternal>);
+pub struct BufHeap(QMutex<BufHeapInternal>);
 
 impl Deref for BufHeap {
-    type Target = Mutex<BufHeapInternal>;
+    type Target = QMutex<BufHeapInternal>;
 
-    fn deref(&self) -> &Mutex<BufHeapInternal> {
+    fn deref(&self) -> &QMutex<BufHeapInternal> {
         &self.0
     }
 }
@@ -510,7 +511,7 @@ impl BufHeap {
             heap: Heap::empty(),
         };
 
-        return Self(Mutex::new(internal))
+        return Self(QMutex::new(internal))
     }
 
     pub fn AddToHead(&self, start: usize, end: usize) {

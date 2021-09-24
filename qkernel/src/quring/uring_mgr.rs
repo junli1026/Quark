@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use spin::Mutex;
+//use spin::Mutex;
 use core::sync::atomic;
 
 use super::super::task::*;
 use super::super::qlib::common::*;
+use super::super::qlib::mutex::QMutex;
 use super::super::taskMgr::*;
 pub use super::super::qlib::uring::cqueue::CompletionQueue;
 pub use super::super::qlib::uring::cqueue;
@@ -136,8 +137,8 @@ impl Completion {
 
 #[derive(Default)]
 pub struct QUring {
-    pub submission: Mutex<Submission>,
-    pub completion: Mutex<Completion>,
+    pub submission: QMutex<Submission>,
+    pub completion: QMutex<Completion>,
     pub asyncMgr: UringAsyncMgr
 }
 
@@ -308,17 +309,22 @@ impl QUring {
             };
 
             call.ret = ret;
-            //error!("uring process: call is {:x?}", &call);
+            //print!("uring process: call is {:x?}", &call);
             ScheduleQ(call.taskId);
         } else {
             let idx = data as usize;
             let mut ops = self.asyncMgr.ops[idx].lock();
+            //print!("uring process: acall is {}", ops.Type());
             let rerun = ops.Process(ret, idx);
+
             if !rerun {
                 *ops = AsyncOps::None;
+
                 self.asyncMgr.FreeSlot(idx);
+
             }
         }
+        //print!("uring process: done");
     }
 
     pub fn UCall(&self, task: &Task, msg: UringOp) -> i64 {
