@@ -16,7 +16,7 @@ use alloc::string::ToString;
 use alloc::vec::Vec;
 use core::ptr;
 use alloc::sync::Arc;
-use spin::RwLock;
+////use spin::RwLock;
 use core::mem;
 use alloc::boxed::Box;
 use lazy_static::lazy_static;
@@ -27,6 +27,7 @@ use core::sync::atomic::Ordering;
 //use super::arch::x86_64::arch_x86::*;
 use super::qlib::linux_def::*;
 use super::qlib::common::*;
+use super::qlib::mutex::*;
 use super::SignalDef::*;
 use super::*;
 use super::vcpu::*;
@@ -63,7 +64,7 @@ pub const DEFAULT_STACK_PAGES: u64 = DEFAULT_STACK_SIZE as u64 / (4 * 1024);
 pub const DEFAULT_STACK_MAST: u64 = !(DEFAULT_STACK_SIZE as u64 - 1);
 
 lazy_static! {
-    pub static ref DUMMY_TASK : RwLock<Task> = RwLock::new(Task::DummyTask());
+    pub static ref DUMMY_TASK : QRwLock<Task> = QRwLock::new(Task::DummyTask());
 }
 
 pub struct TaskStore {}

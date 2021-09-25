@@ -15,7 +15,7 @@
 use alloc::string::String;
 use alloc::sync::Arc;
 //use spin::Mutex;
-use spin::RwLock;
+//use spin::RwLock;
 use alloc::vec::Vec;
 use core::any::Any;
 use core::ops::Deref;
@@ -201,12 +201,12 @@ pub struct StaticFileInodeOpsInternal {
     pub content: Arc<Vec<u8>>
 }
 
-pub struct StaticFileInodeOps(pub Arc<RwLock<StaticFileInodeOpsInternal>>);
+pub struct StaticFileInodeOps(pub Arc<QRwLock<StaticFileInodeOpsInternal>>);
 
 impl Deref for StaticFileInodeOps {
-    type Target = Arc<RwLock<StaticFileInodeOpsInternal>>;
+    type Target = Arc<QRwLock<StaticFileInodeOpsInternal>>;
 
-    fn deref(&self) -> &Arc<RwLock<StaticFileInodeOpsInternal>> {
+    fn deref(&self) -> &Arc<QRwLock<StaticFileInodeOpsInternal>> {
         &self.0
     }
 }
@@ -403,7 +403,7 @@ pub fn NewStaticProcInode(task: &Task, msrc: &Arc<QMutex<MountSource>>, contents
         ..Default::default()
     });
 
-    let iops = StaticFileInodeOps(Arc::new(RwLock::new(StaticFileInodeOpsInternal {
+    let iops = StaticFileInodeOps(Arc::new(QRwLock::new(StaticFileInodeOpsInternal {
         fsType: FSMagic::PROC_SUPER_MAGIC,
         unstable: unstable,
         content: contents.clone(),

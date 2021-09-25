@@ -200,6 +200,7 @@ impl<T> QRwLock<T> {
         }
     }
 }
+
 impl<T: ?Sized> QRwLock<T> {
     #[inline]
     pub fn read(&self) -> QRwLockReadGuard<T> {
@@ -250,5 +251,41 @@ impl<T: ?Sized> QRwLock<T> {
                 data: g
             })
         }
+    }
+}
+
+impl<'rwlock, T: ?Sized> Deref for QRwLockReadGuard<'rwlock, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.data
+    }
+}
+
+impl<'rwlock, T: ?Sized> Deref for QRwLockUpgradableGuard<'rwlock, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.data
+    }
+}
+
+impl<'rwlock, T: ?Sized> Deref for QRwLockWriteGuard<'rwlock, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.data
+    }
+}
+
+impl<'rwlock, T: ?Sized> DerefMut for QRwLockWriteGuard<'rwlock, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.data
+    }
+}
+
+impl<T: ?Sized + Default> Default for QRwLock<T> {
+    fn default() -> Self {
+        Self::new(Default::default())
     }
 }

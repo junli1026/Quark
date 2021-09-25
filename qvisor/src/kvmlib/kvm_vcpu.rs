@@ -387,6 +387,9 @@ impl KVMVcpu {
                     );
 
                     let vcpu_sregs = self.vcpu.get_sregs().map_err(|e| Error::IOError(format!("io::error is {:?}", e)))?;
+                    let regs = self.vcpu.get_regs().map_err(|e| Error::IOError(format!("vcpu::error is {:?}", e)))?;
+                    error!("Panic: CPU[{}] Unexpected exit, regs is {:#x?}, sregs is {:#x?}",
+                        self.id, regs, vcpu_sregs);
                     if vcpu_sregs.cs.dpl != 0x0 { // call from user space
                         panic!("Get VcpuExit::IoIn from guest user space, Abort, vcpu_sregs is {:#x?}", vcpu_sregs)
                     }

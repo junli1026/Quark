@@ -16,7 +16,7 @@ use alloc::vec::Vec;
 use alloc::sync::Arc;
 use alloc::slice;
 use core::ops::Deref;
-use spin::RwLock;
+//use spin::RwLock;
 use xmas_elf::program::Type;
 use xmas_elf::program::ProgramHeader::{Ph64};
 pub use xmas_elf::header::HeaderPt2;
@@ -26,6 +26,7 @@ use lazy_static::lazy_static;
 
 use super::super::qlib::common::*;
 use super::super::qlib::linux_def::*;
+use super::super::qlib::mutex::*;
 
 lazy_static! {
     pub static ref VDSO: Vdso = Vdso::default();
@@ -82,12 +83,12 @@ impl VdsoInternal {
 }
 
 #[derive(Clone, Default)]
-pub struct Vdso(Arc<RwLock<VdsoInternal>>);
+pub struct Vdso(Arc<QRwLock<VdsoInternal>>);
 
 impl Deref for Vdso {
-    type Target = Arc<RwLock<VdsoInternal>>;
+    type Target = Arc<QRwLock<VdsoInternal>>;
 
-    fn deref(&self) -> &Arc<RwLock<VdsoInternal>> {
+    fn deref(&self) -> &Arc<QRwLock<VdsoInternal>> {
         &self.0
     }
 }

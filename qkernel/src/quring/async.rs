@@ -20,7 +20,6 @@ use core::ops::Deref;
 
 use super::super::qlib::linux_def::*;
 use super::super::qlib::common::*;
-//use super::super::qlib::mutex::*;
 use super::super::qlib::uring::squeue;
 use super::super::qlib::uring::opcode::*;
 use super::super::qlib::uring::opcode;

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::string::String;
-use spin::RwLock;
+//use spin::RwLock;
 use core::ops::Deref;
 use alloc::vec::Vec;
 use core::any::Any;
@@ -26,6 +26,7 @@ use super::super::super::flags::*;
 use super::super::super::file::*;
 use super::super::super::dirent::*;
 use super::super::super::super::qlib::linux_def::*;
+use super::super::super::super::qlib::mutex::*;
 use super::super::super::super::task::*;
 use super::super::super::super::qlib::common::*;
 use super::super::super::super::qlib::auth::*;
@@ -48,12 +49,12 @@ pub struct SimpleFileInodeInternal <T: 'static + SimpleFileTrait> {
     pub data: T,
 }
 
-pub struct SimpleFileInode<T: 'static + SimpleFileTrait> (RwLock<SimpleFileInodeInternal<T>>);
+pub struct SimpleFileInode<T: 'static + SimpleFileTrait> (QRwLock<SimpleFileInodeInternal<T>>);
 
 impl <T: 'static + SimpleFileTrait> Deref for SimpleFileInode <T> {
-    type Target = RwLock<SimpleFileInodeInternal<T>>;
+    type Target = QRwLock<SimpleFileInodeInternal<T>>;
 
-    fn deref(&self) -> &RwLock<SimpleFileInodeInternal<T>> {
+    fn deref(&self) -> &QRwLock<SimpleFileInodeInternal<T>> {
         &self.0
     }
 }
@@ -82,7 +83,7 @@ impl <T: 'static + SimpleFileTrait> SimpleFileInode <T> {
             data: data,
         };
 
-        return Self(RwLock::new(internal))
+        return Self(QRwLock::new(internal))
     }
 }
 
@@ -259,18 +260,18 @@ impl InodeSimpleAttributesInternal {
     }
 }
 
-pub struct InodeSimpleAttributes(pub RwLock<InodeSimpleAttributesInternal>);
+pub struct InodeSimpleAttributes(pub QRwLock<InodeSimpleAttributesInternal>);
 
 impl Default for InodeSimpleAttributes {
     fn default() -> Self {
-        return Self(RwLock::new(Default::default()))
+        return Self(QRwLock::new(Default::default()))
     }
 }
 
 impl Deref for InodeSimpleAttributes {
-    type Target = RwLock<InodeSimpleAttributesInternal>;
+    type Target = QRwLock<InodeSimpleAttributesInternal>;
 
-    fn deref(&self) -> &RwLock<InodeSimpleAttributesInternal> {
+    fn deref(&self) -> &QRwLock<InodeSimpleAttributesInternal> {
         &self.0
     }
 }
@@ -292,7 +293,7 @@ impl InodeSimpleAttributes {
             unstable: *u,
         };
 
-        return Self(RwLock::new(internal))
+        return Self(QRwLock::new(internal))
     }
 
     fn UnstableAttr(&self, _task: &Task, _dir: &Inode) -> Result<UnstableAttr> {

@@ -183,7 +183,7 @@ impl<T: core::clone::Clone> AreaMgr<T> {
     pub fn RemoveRange(&mut self, start: u64, len: u64) {
         let r = Range { start, len };
 
-        //let mut inserts : Vec<(u64, u64, Arc<RwLock<Box<T>>>)> = Vec::new();
+        //let mut inserts : Vec<(u64, u64, Arc<QRwLock<Box<T>>>)> = Vec::new();
         let mut inserts: Vec<(u64, u64, T)> = Vec::new();
         let mut removes: Vec<u64> = Vec::new();
 
@@ -215,7 +215,7 @@ impl<T: core::clone::Clone> AreaMgr<T> {
         }
     }
 
-    //pub fn Add(&mut self, start: u64, len: u64, data: &Arc<RwLock<Box<T>>>) {
+    //pub fn Add(&mut self, start: u64, len: u64, data: &Arc<QRwLock<Box<T>>>) {
     pub fn Add(&mut self, start: u64, len: u64, data: &T) {
         self.RemoveRange(start, len);
         self.map.insert(start, (len, data.clone()));
@@ -283,7 +283,7 @@ impl<T: core::clone::Clone> AreaMgr<T> {
         return Ok(())
     }
 
-    //pub fn Get(&self, key: u64) -> Option<(u64, u64, Arc<RwLock<Box<T>>>)> {
+    //pub fn Get(&self, key: u64) -> Option<(u64, u64, Arc<QRwLock<Box<T>>>)> {
     pub fn Get(&self, key: u64) -> Option<(u64, u64, &T)> {
         let mut iter = self.map.range((Unbounded, Included(key))).rev();
         match iter.next() {

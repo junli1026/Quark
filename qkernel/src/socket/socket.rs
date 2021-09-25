@@ -1,6 +1,6 @@
 use alloc::string::ToString;
 use alloc::sync::Arc;
-use spin::RwLock;
+//use spin::RwLock;
 //use spin::Mutex;
 use lazy_static::lazy_static;
 use alloc::collections::btree_map::BTreeMap;
@@ -24,7 +24,7 @@ use super::super::fs::inode::*;
 use super::super::fs::host::util::*;
 
 lazy_static! {
-    pub static ref FAMILIAES: RwLock<Families> = RwLock::new(Families::New());
+    pub static ref FAMILIAES: QRwLock<Families> = QRwLock::new(Families::New());
     pub static ref SOCKET_DEVICE : Arc<QMutex<Device>> = NewAnonDevice();
     pub static ref UNIX_SOCKET_DEVICE : Arc<QMutex<Device>> = NewAnonDevice();
 }

@@ -16,7 +16,7 @@ use alloc::string::String;
 use alloc::string::ToString;
 use alloc::collections::btree_map::BTreeMap;
 use alloc::vec::Vec;
-use spin::RwLock;
+//use spin::RwLock;
 //use spin::Mutex;
 use core::any::Any;
 use alloc::sync::Arc;
@@ -128,12 +128,12 @@ impl DirInternal {
 }
 
 #[derive(Clone)]
-pub struct Dir(pub Arc<RwLock<DirInternal>>);
+pub struct Dir(pub Arc<QRwLock<DirInternal>>);
 
 impl Deref for Dir {
-    type Target = Arc<RwLock<DirInternal>>;
+    type Target = Arc<QRwLock<DirInternal>>;
 
-    fn deref(&self) -> &Arc<RwLock<DirInternal>> {
+    fn deref(&self) -> &Arc<QRwLock<DirInternal>> {
         &self.0
     }
 }
@@ -166,7 +166,7 @@ impl Dir {
             xattrs: BTreeMap::new(),
         };
 
-        let ret = Dir(Arc::new(RwLock::new(d)));
+        let ret = Dir(Arc::new(QRwLock::new(d)));
         ret.AddLink(task);
         return ret;
     }

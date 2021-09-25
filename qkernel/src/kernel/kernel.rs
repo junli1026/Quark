@@ -13,7 +13,7 @@
 // limitations under the License.
 
 //use spin::Mutex;
-use spin::RwLock;
+//use spin::RwLock;
 use alloc::sync::Arc;
 use alloc::vec::Vec;
 use core::sync::atomic::AtomicU64;
@@ -145,7 +145,7 @@ pub struct KernelInternal {
     //pub useHostCores: bool,
 
     // mounts holds the state of the virtual filesystem.
-    pub mounts: RwLock<Option<MountNs>>,
+    pub mounts: QRwLock<Option<MountNs>>,
 
     // globalInit is the thread group whose leader has ID 1 in the root PID
     // namespace. globalInit is stored separately so that it is accessible even
@@ -230,7 +230,7 @@ impl Kernel {
             rootUTSNamespace: args.RootUTSNamespace,
             rootIPCNamespace: args.RootIPCNamespace,
             applicationCores: args.ApplicationCores as usize - 1,
-            mounts: RwLock::new(None),
+            mounts: QRwLock::new(None),
             globalInit: QMutex::new(None),
             cpuClock: AtomicU64::new(0),
             staticInfo: QMutex::new(StaticInfo {

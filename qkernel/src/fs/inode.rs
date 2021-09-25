@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 //use alloc::string::ToString;
 use alloc::sync::Arc;
 //use spin::Mutex;
-use spin::RwLock;
+//use spin::RwLock;
 use core::any::Any;
 use core::ops::Deref;
 
@@ -659,7 +659,7 @@ pub struct InodeIntern {
     pub StableAttr: StableAttr,
     pub LockCtx: LockCtx,
     pub MountSource: Arc<QMutex<MountSource>>,
-    pub Overlay: Option<Arc<RwLock<OverlayEntry>>>,
+    pub Overlay: Option<Arc<QRwLock<OverlayEntry>>>,
 }
 
 impl Default for InodeIntern {

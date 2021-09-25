@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::RwLock;
+//use spin::RwLock;
 //use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
@@ -49,7 +49,7 @@ pub fn NewSlaveNode(task: &Task, d: &DirInodeOperations, t: &Arc<Terminal>, owne
         ..Default::default()
     });
 
-    let iops = SlaveInodeOperations(Arc::new(RwLock::new(SlaveInodeOperationsInternal {
+    let iops = SlaveInodeOperations(Arc::new(QRwLock::new(SlaveInodeOperationsInternal {
         fsType: FSMagic::DEVPTS_SUPER_MAGIC,
         unstable: unstable,
         d: d.clone(),
@@ -89,12 +89,12 @@ pub struct SlaveInodeOperationsInternal {
 }
 
 #[derive(Clone)]
-pub struct SlaveInodeOperations(Arc<RwLock<SlaveInodeOperationsInternal>>);
+pub struct SlaveInodeOperations(Arc<QRwLock<SlaveInodeOperationsInternal>>);
 
 impl Deref for SlaveInodeOperations {
-    type Target = Arc<RwLock<SlaveInodeOperationsInternal>>;
+    type Target = Arc<QRwLock<SlaveInodeOperationsInternal>>;
 
-    fn deref(&self) -> &Arc<RwLock<SlaveInodeOperationsInternal>> {
+    fn deref(&self) -> &Arc<QRwLock<SlaveInodeOperationsInternal>> {
         &self.0
     }
 }

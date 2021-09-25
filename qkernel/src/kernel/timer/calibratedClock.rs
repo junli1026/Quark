@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::sync::Arc;
-use spin::RwLock;
+//use spin::RwLock;
 use lazy_static::lazy_static;
 use core::ops::Deref;
 
@@ -21,6 +21,7 @@ use super::super::super::asm::muldiv64;
 use super::super::super::qlib::linux::time::*;
 use super::super::super::qlib::metric::*;
 use super::super::super::qlib::common::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::Kernel::HostSpace;
 use super::super::super::asm::*;
@@ -99,12 +100,12 @@ impl CalibratedClockInternal {
 }
 
 #[derive(Clone)]
-pub struct CalibratedClock(Arc<RwLock<CalibratedClockInternal>>);
+pub struct CalibratedClock(Arc<QRwLock<CalibratedClockInternal>>);
 
 impl Deref for CalibratedClock {
-    type Target = Arc<RwLock<CalibratedClockInternal>>;
+    type Target = Arc<QRwLock<CalibratedClockInternal>>;
 
-    fn deref(&self) -> &Arc<RwLock<CalibratedClockInternal>> {
+    fn deref(&self) -> &Arc<QRwLock<CalibratedClockInternal>> {
         &self.0
     }
 }
@@ -117,7 +118,7 @@ impl CalibratedClock {
             params: Parameters::default(),
             errorNS: 0,
         };
-        return Self(Arc::new(RwLock::new(internal)))
+        return Self(Arc::new(QRwLock::new(internal)))
     }
 
     // reset forces the clock to restart the calibration process, logging the

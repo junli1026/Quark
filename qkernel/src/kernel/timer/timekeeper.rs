@@ -14,11 +14,12 @@
 
 use alloc::sync::Arc;
 use core::ops::Deref;
-use spin::RwLock;
+//use spin::RwLock;
 
 use super::super::super::kernel::time::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::linux::time::*;
+use super::super::super::qlib::mutex::*;
 //use super::super::super::qlib::perf_tunning::*;
 use super::super::vdso::*;
 use super::calibratedClock::*;
@@ -27,12 +28,12 @@ use super::timer::*;
 use super::*;
 
 #[derive(Clone, Default)]
-pub struct TimeKeeper(Arc<RwLock<TimeKeeperInternal>>);
+pub struct TimeKeeper(Arc<QRwLock<TimeKeeperInternal>>);
 
 impl Deref for TimeKeeper {
-    type Target = Arc<RwLock<TimeKeeperInternal>>;
+    type Target = Arc<QRwLock<TimeKeeperInternal>>;
 
-    fn deref(&self) -> &Arc<RwLock<TimeKeeperInternal>> {
+    fn deref(&self) -> &Arc<QRwLock<TimeKeeperInternal>> {
         &self.0
     }
 }

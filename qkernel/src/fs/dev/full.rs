@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::string::String;
-use spin::RwLock;
+//use spin::RwLock;
 //use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
@@ -42,18 +42,18 @@ use super::super::flags::*;
 use super::super::fsutil::inode::*;
 use super::super::fsutil::file::*;
 
-pub struct FullDevice(pub RwLock<InodeSimpleAttributesInternal>);
+pub struct FullDevice(pub QRwLock<InodeSimpleAttributesInternal>);
 
 impl Default for FullDevice {
     fn default() -> Self {
-        return Self(RwLock::new(Default::default()))
+        return Self(QRwLock::new(Default::default()))
     }
 }
 
 impl Deref for FullDevice {
-    type Target = RwLock<InodeSimpleAttributesInternal>;
+    type Target = QRwLock<InodeSimpleAttributesInternal>;
 
-    fn deref(&self) -> &RwLock<InodeSimpleAttributesInternal> {
+    fn deref(&self) -> &QRwLock<InodeSimpleAttributesInternal> {
         &self.0
     }
 }
@@ -61,7 +61,7 @@ impl Deref for FullDevice {
 impl FullDevice {
     pub fn New(task: &Task, owner: &FileOwner, mode: &FileMode) -> Self {
         let attr = InodeSimpleAttributesInternal::New(task, owner, &FilePermissions::FromMode(*mode), FSMagic::TMPFS_MAGIC);
-        return Self(RwLock::new(attr))
+        return Self(QRwLock::new(attr))
     }
 }
 

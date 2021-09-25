@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use alloc::string::String;
-use spin::RwLock;
+//use spin::RwLock;
 //use spin::Mutex;
 use core::ops::Deref;
 use core::any::Any;
@@ -24,6 +24,7 @@ use socket::unix::transport::unix::BoundEndpoint;
 use super::super::host::hostinodeop::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::qlib::linux_def::*;
 use super::super::super::task::*;
 use super::super::super::kernel::time::*;
@@ -33,7 +34,6 @@ use super::super::super::qlib::mem::seq::*;
 use super::super::super::qlib::mem::io::*;
 use super::super::super::kernel::waiter::qlock::*;
 use super::super::super::id_mgr::*;
-use super::super::super::qlib::mutex::*;
 
 use super::super::inode::*;
 use super::super::mount::*;
@@ -45,18 +45,18 @@ use super::super::flags::*;
 use super::super::fsutil::inode::*;
 use super::super::fsutil::file::*;
 
-pub struct RandomDevice(pub RwLock<InodeSimpleAttributesInternal>);
+pub struct RandomDevice(pub QRwLock<InodeSimpleAttributesInternal>);
 
 impl Default for RandomDevice {
     fn default() -> Self {
-        return Self(RwLock::new(Default::default()))
+        return Self(QRwLock::new(Default::default()))
     }
 }
 
 impl Deref for RandomDevice {
-    type Target = RwLock<InodeSimpleAttributesInternal>;
+    type Target = QRwLock<InodeSimpleAttributesInternal>;
 
-    fn deref(&self) -> &RwLock<InodeSimpleAttributesInternal> {
+    fn deref(&self) -> &QRwLock<InodeSimpleAttributesInternal> {
         &self.0
     }
 }
@@ -64,7 +64,7 @@ impl Deref for RandomDevice {
 impl RandomDevice {
     pub fn New(task: &Task, owner: &FileOwner, mode: &FileMode) -> Self {
         let attr = InodeSimpleAttributesInternal::New(task, owner, &FilePermissions::FromMode(*mode), FSMagic::TMPFS_MAGIC);
-        return Self(RwLock::new(attr))
+        return Self(QRwLock::new(attr))
     }
 }
 

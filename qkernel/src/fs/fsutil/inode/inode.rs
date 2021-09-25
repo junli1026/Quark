@@ -14,7 +14,7 @@
 
 use alloc::string::String;
 use alloc::string::ToString;
-use spin::RwLock;
+//use spin::RwLock;
 //use spin::Mutex;
 use core::ops::Deref;
 use alloc::collections::btree_map::BTreeMap;
@@ -34,6 +34,7 @@ use super::super::super::qlib::linux_def::*;
 use super::super::super::task::*;
 use super::super::super::qlib::common::*;
 use super::super::super::qlib::auth::*;
+use super::super::super::qlib::mutex::*;
 use super::super::super::kernel::time::*;
 use super::super::super::kernel::waiter::lock::*;
 use super::super::host::hostinodeop::*;
@@ -51,18 +52,18 @@ impl Default for InodeSimpleExtendedAttributesInternal {
     }
 }
 
-pub struct InodeSimpleExtendedAttributes(pub RwLock<InodeSimpleExtendedAttributesInternal>);
+pub struct InodeSimpleExtendedAttributes(pub QRwLock<InodeSimpleExtendedAttributesInternal>);
 
 impl Default for InodeSimpleExtendedAttributes {
     fn default() -> Self {
-        return Self(RwLock::new(Default::default()))
+        return Self(QRwLock::new(Default::default()))
     }
 }
 
 impl Deref for InodeSimpleExtendedAttributes {
-    type Target = RwLock<InodeSimpleExtendedAttributesInternal>;
+    type Target = QRwLock<InodeSimpleExtendedAttributesInternal>;
 
-    fn deref(&self) -> &RwLock<InodeSimpleExtendedAttributesInternal> {
+    fn deref(&self) -> &QRwLock<InodeSimpleExtendedAttributesInternal> {
         &self.0
     }
 }
@@ -102,18 +103,18 @@ impl Default for InodeStaticFileGetterInternal {
     }
 }
 
-pub struct InodeStaticFileGetter(pub RwLock<InodeStaticFileGetterInternal>);
+pub struct InodeStaticFileGetter(pub QRwLock<InodeStaticFileGetterInternal>);
 
 impl Default for InodeStaticFileGetter {
     fn default() -> Self {
-        return Self(RwLock::new(Default::default()))
+        return Self(QRwLock::new(Default::default()))
     }
 }
 
 impl Deref for InodeStaticFileGetter {
-    type Target = RwLock<InodeStaticFileGetterInternal>;
+    type Target = QRwLock<InodeStaticFileGetterInternal>;
 
-    fn deref(&self) -> &RwLock<InodeStaticFileGetterInternal> {
+    fn deref(&self) -> &QRwLock<InodeStaticFileGetterInternal> {
         &self.0
     }
 }
