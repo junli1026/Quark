@@ -18,7 +18,7 @@ use core::fmt;
 use core::sync::atomic::{AtomicU64};
 use core::marker::PhantomData;
 use core::hint::spin_loop;
-use spin::*;
+//use spin::*;
 
 use super::linux_def::QOrdering;
 
@@ -59,8 +59,8 @@ impl<T: ?Sized> QMutex<T> {
         // when called in a loop.
         let id = Self::GetID();
 
-        let mut val;
-        for _ in 0..100 {
+        let mut val = 0;
+        for _ in 0..10000 {
             super::super::asm::mfence();
             val = self.lock.compare_and_swap(0, id, QOrdering::ACQUIRE);
             if val == 0 {
@@ -74,7 +74,7 @@ impl<T: ?Sized> QMutex<T> {
         }
 
 
-        //self.Log(0x123, val);
+        self.Log(0x123, val);
 
         loop  {
             super::super::asm::mfence();
@@ -172,7 +172,101 @@ impl<'a, T: ?Sized> Drop for QMutexGuard<'a, T> {
     }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
 
+pub struct QRwLock<T: ?Sized> {
+    data: QMutex<T>,
+}
+
+pub struct QRwLockReadGuard<'a, T: 'a + ?Sized> {
+    data: QMutexGuard<'a, T>,
+}
+
+pub struct QRwLockWriteGuard<'a, T: 'a + ?Sized> {
+    data: QMutexGuard<'a, T>,
+}
+
+
+unsafe impl<T: ?Sized + Send> Send for QRwLock<T> {}
+unsafe impl<T: ?Sized + Send + Sync> Sync for QRwLock<T> {}
+
+impl<T> QRwLock<T> {
+    #[inline]
+    pub const fn new(data: T) -> Self {
+        return Self {
+            data: QMutex::new(data)
+        }
+    }
+}
+
+impl<T: ?Sized> QRwLock<T> {
+    #[inline]
+    pub fn read(&self) -> QRwLockReadGuard<T> {
+        return QRwLockReadGuard {
+            data: self.data.lock()
+        }
+    }
+
+    #[inline]
+    pub fn write(&self) -> QRwLockWriteGuard<T> {
+        super::super::asm::mfence();
+        return QRwLockWriteGuard {
+            data: self.data.lock()
+        }
+    }
+
+    #[inline]
+    pub fn try_read(&self) -> Option<QRwLockReadGuard<T>> {
+        match self.data.try_lock() {
+            None => None,
+            Some(g) => Some(QRwLockReadGuard{
+                data: g
+            })
+        }
+    }
+
+    #[inline]
+    pub fn try_write(&self) -> Option<QRwLockWriteGuard<T>> {
+        match self.data.try_lock() {
+            None => None,
+            Some(g) => Some(QRwLockWriteGuard{
+                data: g
+            })
+        }
+    }
+}
+
+impl<'rwlock, T: ?Sized> Deref for QRwLockReadGuard<'rwlock, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.data
+    }
+}
+
+impl<'rwlock, T: ?Sized> Deref for QRwLockWriteGuard<'rwlock, T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.data
+    }
+}
+
+impl<'rwlock, T: ?Sized> DerefMut for QRwLockWriteGuard<'rwlock, T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.data
+    }
+}
+
+impl<T: ?Sized + Default> Default for QRwLock<T> {
+    fn default() -> Self {
+        Self::new(Default::default())
+    }
+}
+
+//////////////////////////////////////////////////////////////////
+
+/*
 pub struct QRwLock<T: ?Sized> {
     data: RwLock<T>,
 }
@@ -204,6 +298,7 @@ impl<T> QRwLock<T> {
 impl<T: ?Sized> QRwLock<T> {
     #[inline]
     pub fn read(&self) -> QRwLockReadGuard<T> {
+        super::super::asm::mfence();
         return QRwLockReadGuard {
             data: self.data.read()
         }
@@ -211,6 +306,7 @@ impl<T: ?Sized> QRwLock<T> {
 
     #[inline]
     pub fn write(&self) -> QRwLockWriteGuard<T> {
+        super::super::asm::mfence();
         return QRwLockWriteGuard {
             data: self.data.write()
         }
@@ -225,6 +321,7 @@ impl<T: ?Sized> QRwLock<T> {
 
     #[inline]
     pub fn try_read(&self) -> Option<QRwLockReadGuard<T>> {
+        super::super::asm::mfence();
         match self.data.try_read() {
             None => None,
             Some(g) => Some(QRwLockReadGuard{
@@ -245,6 +342,7 @@ impl<T: ?Sized> QRwLock<T> {
 
     #[inline]
     pub fn try_upgradeable_read(&self) -> Option<QRwLockUpgradableGuard<T>> {
+        super::super::asm::mfence();
         match self.data.try_upgradeable_read() {
             None => None,
             Some(g) => Some(QRwLockUpgradableGuard {
@@ -289,3 +387,4 @@ impl<T: ?Sized + Default> Default for QRwLock<T> {
         Self::new(Default::default())
     }
 }
+*/

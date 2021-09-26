@@ -142,9 +142,11 @@ pub fn LoadExecutable(task: &mut Task, filename: &str, argv: &mut Vec<String>) -
     let mut argv = tmp;
 
     for _i in 0..MAX_LOADER_ATTEMPTS {
+        error!("LoadExecutable 1");
         let (file, executable) = OpenPath(task, &filename, 40)?;
         let mut hdr : [u8; 4] = [0; 4];
 
+        error!("LoadExecutable 2");
         match ReadAll(task, &file, &mut hdr, 0) {
             Err(e) => {
                 print!("Error loading ELF {:?}", e);
@@ -158,6 +160,7 @@ pub fn LoadExecutable(task: &mut Task, filename: &str, argv: &mut Vec<String>) -
             },
         }
 
+        error!("LoadExecutable 3");
         if SliceCompare(&hdr, ELF_MAGIC.as_bytes()) {
             let loaded = LoadElf(task, &file)?;
             return Ok((loaded, executable, argv))
@@ -213,16 +216,21 @@ pub const TASK_COMM_LEN : usize = 16;
 // Load loads filename into a MemoryManager.
 //return (entry: u64, usersp: u64, kernelsp: u64)
 pub fn Load(task: &mut Task, filename: &str, argv: &mut Vec<String>, envv: &[String], extraAuxv: &[AuxEntry]) -> Result<(u64, u64, u64)> {
+    error!("Load 1");
     let vdsoAddr = LoadVDSO(task)?;
 
+    error!("Load 1.1");
     let (loaded, executable, tmpArgv) = LoadExecutable(task, filename, argv)?;
+    error!("Load 1.2");
     let argv = tmpArgv;
 
+    error!("Load 2");
     let e = Addr(loaded.end).RoundUp()?.0;
 
     task.mm.BrkSetup(e);
     task.mm.SetExecutable(&executable);
 
+    error!("Load 3");
     let mut name = Base(&filename);
     if name.len() > TASK_COMM_LEN - 1 {
         name = &name[0..TASK_COMM_LEN-1];
@@ -232,12 +240,14 @@ pub fn Load(task: &mut Task, filename: &str, argv: &mut Vec<String>, envv: &[Str
 
     let stackRange = CreateStack(task)?;
 
+    error!("Load 4");
     let mut stack = Stack::New(stackRange.End());
 
     let usersp = SetupUserStack(task, &mut stack, &loaded, filename, &argv, envv, extraAuxv, vdsoAddr)?;
     let kernelsp = Task::TaskId().Addr() + MemoryDef::DEFAULT_STACK_SIZE - 0x10;
     let entry = loaded.entry;
 
+    error!("Load5");
     return Ok((entry, usersp, kernelsp));
 }
 

@@ -19,10 +19,12 @@ use core::cmp::max;
 use core::mem::size_of;
 use core::ptr::NonNull;
 //use spin::Mutex;
-use buddy_system_allocator::Heap;
+//use buddy_system_allocator::Heap;
 
-use super::super::range::Range;
-use super::super::mutex::QMutex;
+use super::buddy_allocator::Heap;
+
+use super::qlib::range::Range;
+use super::qlib::mutex::QMutex;
 
 pub const CLASS_CNT : usize = 16;
 pub const FREE_THRESHOLD: usize = 30; // when free size less than 30%, need to free buffer
@@ -43,7 +45,29 @@ pub struct ListAllocator {
 
 pub trait OOMHandler {
     fn handleError(&self, a:u64, b:u64);
-    fn log(&self, a: u64, b: u64);
+    fn log(&self, a: u64, b: u64, c: u64);
+}
+
+impl OOMHandler for ListAllocator {
+    fn handleError(&self, size:u64, alignment:u64) {
+        super::Kernel::HostSpace::KernelOOM(size, alignment);
+    }
+
+    fn log(&self, a: u64, b: u64, c: u64) {
+        super::Kernel::HostSpace::KernelMsg(a, b, c);
+    }
+}
+
+impl ListAllocator {
+    pub fn initialize(&self)-> () {
+        self.initialized.store(true, Ordering::Relaxed);
+    }
+}
+
+impl<T: ?Sized> QMutex<T> {
+    pub fn Log(&self, a: u64, b: u64) {
+        super::Kernel::HostSpace::KernelMsg(a, b, 0);
+    }
 }
 
 impl ListAllocator {
@@ -155,7 +179,7 @@ unsafe impl GlobalAlloc for ListAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let initialized = self.initialized.load(Ordering::Relaxed);
         if !initialized {
-            self.initialize();      
+            self.initialize();
         }
 
         let size = max(
@@ -181,7 +205,15 @@ unsafe impl GlobalAlloc for ListAllocator {
             .ok()
             .map_or(0 as *mut u8, |allocation| allocation.as_ptr()) as u64;
 
-        self.log(size as u64, ret as u64);
+        //self.log(size as u64, ret as u64, 0);
+
+        let range = self.range.lock().clone();
+        let addr = ret as u64;
+        if !range.Contains(addr) || !range.Contains(addr + size as u64) {
+            self.log(0x111, range.Start(), range.End());
+            self.log(0x111, addr, size as u64);
+        }
+
         if ret == 0 {
             self.handleError(size as u64, layout.align() as u64);
             loop {}
@@ -203,9 +235,9 @@ unsafe impl GlobalAlloc for ListAllocator {
         let addr = ptr as u64;
         let range = self.range.lock().clone();
         if !range.Contains(addr) || !range.Contains(addr + size as u64) {
-            self.log(range.Start(), range.End());
-            self.log(addr, size as u64);
-            self.log(super::super::super::asm::GetRsp(), 0);
+            self.log(range.Start(), range.End(), 0);
+            self.log(addr, size as u64, 0);
+            self.log(super::asm::GetRsp(), 0, 0);
             return
             //self.handleError(addr, size as u64);
         }
@@ -304,7 +336,6 @@ impl FreeMemBlockMgr {
 
 
 type MemBlock = u64;
-
 
 pub struct MemList {
     size: u64,

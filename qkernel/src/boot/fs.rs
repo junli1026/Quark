@@ -144,14 +144,18 @@ pub fn BootInitRootFs(task: &mut Task, root: &str) -> Result<MountNs> {
 pub fn SetupRootContainerFS(task: &mut Task, spec: &oci::Spec, conf: &config::Config) -> Result<MountNs> {
     let mounts = CompileMounts(spec);
 
-    //error!("SetupRootContainerFS 1.0 mounts[0].destination is {:?}", &mounts[0].destination);
+    error!("SetupRootContainerFS 1 mounts[0].destination is {:?}", &mounts[0].destination);
 
     let rootInode = CreateRootMount(task, spec, conf, &mounts)?;
+    error!("SetupRootContainerFS 2");
     let mns = MountNs::New(task, &rootInode);
 
+    error!("SetupRootContainerFS 3");
     let root = mns.Root();
+    error!("SetupRootContainerFS 4");
 
     MountSubmounts(task, conf, &mns, &root, &mounts)?;
+    error!("SetupRootContainerFS 5");
     return Ok(mns);
 }
 
@@ -246,13 +250,16 @@ fn MountSubmounts(task: &Task, config: &config::Config, mns: &MountNs, root: &Di
 fn MountSubmount(task: &Task, config: &config::Config, mns: &MountNs, root: &Dirent, m: &oci::Mount, mounts: &Vec<oci::Mount>) -> Result<()> {
     let (fsName, opts) = GetMountNameAndOptions(config, m)?;
 
+    error!("MountSubmount 1");
     if fsName.as_str() == "" {
         return Ok(())
     }
 
+
     let filesystem = MustFindFilesystem(&fsName);
     let mf = mountFlags(&m.options);
 
+    error!("MountSubmount 2");
     let mut inode = filesystem.lock().Mount(task, &"none".to_string(), &mf, &opts.join(","))?;
     let submounts = SubTargets(&m.destination, mounts);
     if submounts.len() > 0 {
@@ -260,8 +267,11 @@ fn MountSubmount(task: &Task, config: &config::Config, mns: &MountNs, root: &Dir
         inode = AddSubmountOverlay(task, &inode, &submounts)?;
     }
 
+    error!("MountSubmount 3");
+
     let mut maxTraversals = 0;
     let dirent = mns.FindInode(task, root, Some(root.clone()), &m.destination, &mut maxTraversals)?;
+    error!("MountSubmount 4");
     mns.Mount(&dirent, &inode)?;
 
     info!("Mounted {} to {} type {}", m.source, m.destination, m.typ);

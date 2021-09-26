@@ -2693,8 +2693,6 @@ impl MemoryDef {
     pub const PUD_SIZE: u64 = 1 << Self::PUD_SHIFT;
     pub const PGD_SIZE: u64 = 1 << Self::PGD_SHIFT;
 
-    //the blocks count put on stack to avoid heap allocation, total handle buffer size 32 * 4k = 128K
-    pub const ON_STACK_BLOCKS: usize = 32;
 
     pub const PAGE_SHIFT: u64 = 12;
     pub const HUGE_PAGE_SHIFT: u64 = 21;
@@ -2711,7 +2709,7 @@ impl MemoryDef {
 
     pub const MSG_QLEN: usize = 1024;
     pub const QURING_SIZE: usize = 1024;
-    pub const DEFAULT_STACK_PAGES: u64 = 32;
+    pub const DEFAULT_STACK_PAGES: u64 = 16;
 
     pub const DEFAULT_STACK_SIZE: u64 = Self::DEFAULT_STACK_PAGES * Self::PAGE_SIZE;  //64 KB
     pub const PAGE_SIZE: u64 = 1 << Self::PAGE_SHIFT;//0x1000;

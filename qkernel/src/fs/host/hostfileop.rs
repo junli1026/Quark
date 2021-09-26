@@ -237,12 +237,14 @@ impl FileOperations for HostFileOp {
             return Ok(ret as i64)
         } else {
             if SHARESPACE.config.TcpBuffIO {
+                error!("ReadAt 1");
                 let ret = IOURING.Read(task,
                                         hostIops.HostFd(),
                                         &mut iovs[0] as * mut _ as u64,
                                         iovs.len() as u32,
                                         offset as i64);
 
+                error!("ReadAt 2");
                 if ret < 0 {
                     if ret as i32 != -SysErr::EINVAL {
                         return Err(Error::SysError(-ret as i32))

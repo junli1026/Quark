@@ -28,7 +28,11 @@ pub struct Config {
     pub PerfDebug: bool,
 }
 
-impl Config {}
+impl Config {
+    pub fn NeedPrint(&self, msgLevel: DebugLevel) -> bool {
+        return self.DebugLevel >= msgLevel;
+    }
+}
 
 impl Default for Config {
     fn default() -> Self {

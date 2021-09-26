@@ -32,6 +32,7 @@ lazy_static! {
 }
 
 pub fn Run() -> Result<()> {
+    error!("run start ...");
     let task = Task::Current();
     loop {
         let msg = ControlMsgCall()?;
@@ -86,6 +87,7 @@ pub fn Run() -> Result<()> {
                     }
                 };
 
+                info!("get signal 2 {:?}", &signalArgs);
                 ControlMsgRet(msg.msgId, &UCallResp::SignalResp);
                 continue;
             }
@@ -103,6 +105,7 @@ pub fn Run() -> Result<()> {
 
         *MSG.lock() = Some(msg);
 
+        error!("run start ... 2");
         taskMgr::CreateTask(ControlMsgHandler, ptr::null(), false);
     }
 }
@@ -113,6 +116,7 @@ pub fn ControlMsgHandler(_para: *const u8) {
     match msg.payload {
         Payload::RootContainerStart(_) => {
             ControlMsgRet(msg.msgId, &UCallResp::RootContainerStartResp);
+            error!("ControlMsgHandler 1");
             StartRootContainer(ptr::null());
         }
         Payload::ExecProcess(process) => {

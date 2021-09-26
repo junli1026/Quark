@@ -74,3 +74,7 @@ pub fn lfence() {
         lfence
     " : : : "memory" : "volatile" ) }
 }
+
+pub fn GetRsp() -> u64 {
+    return 0
+}

@@ -48,35 +48,44 @@ pub fn NewOverlayMountSource(upper: &Arc<QMutex<MountSource>>, lower: &Arc<QMute
 
 impl DirentOperations for OverlayMountSourceOperations {
     fn Revalidate(&self, name: &str, parent: &Inode, child: &Inode) -> bool {
+        error!("Revalidate 1");
         let c = match &child.lock().Overlay {
             None => panic!("overlay cannot revalidate inode that is not an overlay"),
             Some(c) => c.clone(),
         };
 
+        error!("Revalidate 2");
         let p = match &parent.lock().Overlay {
             None => panic!("trying to revalidate an overlay inode but the parent is not an overlay"),
             Some(p) => p.clone(),
         };
 
+        error!("Revalidate 3");
         match &c.read().lower {
             Some(ref _l) => {
+                error!("Revalidate 4");
                 let parentLower = match &p.read().lower {
                     Some(ref l) => l.clone(),
                     _ => panic!("Revalidatef fail"),
                 };
 
+                error!("Revalidate 4.1");
                 let childLower = match &c.read().lower {
                     Some(ref l) => l.clone(),
                     _ => panic!("Revalidatef fail"),
                 };
 
+                error!("Revalidate 4.2");
                 if self.lower.lock().Revalidate(name, &parentLower, &childLower) {
                     panic!("an overlay cannot revalidate file objects from the lower fs")
                 }
+                error!("Revalidate 4.3");
+
             }
             None => (),
         }
 
+        error!("Revalidate 5");
         match &c.read().upper {
             None => return false,
             _ => (),

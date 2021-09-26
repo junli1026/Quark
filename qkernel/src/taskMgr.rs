@@ -216,7 +216,7 @@ pub fn Wait() {
             break;
         }
 
-        super::ALLOCATOR.Free();
+        //super::ALLOCATOR.Free();
 
         let currentTime = Rdtsc();
         if currentTime - start >= WAIT_CYCLES {

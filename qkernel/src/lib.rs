@@ -99,6 +99,8 @@ pub mod seqcount;
 pub mod quring;
 pub mod stack;
 pub mod backtracer;
+pub mod list_allocator;
+pub mod buddy_allocator;
 
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
@@ -129,7 +131,8 @@ use self::task::*;
 use self::threadmgr::task_sched::*;
 use self::qlib::perf_tunning::*;
 //use self::memmgr::buf_allocator::*;
-use self::qlib::mem::list_allocator::*;
+//use self::qlib::mem::list_allocator::*;
+use self::list_allocator::*;
 use self::quring::*;
 use self::print::SCALE;
 
@@ -359,9 +362,27 @@ pub fn LogInit(pages: u64) {
     *SHARESPACE.logBuf.lock() = Some(bs);
 }
 
+pub fn PrintData(id: u64) {
+    let val = unsafe {
+        *(0x43c41efd78 as * const u64)
+    };
+    Kernel::HostSpace::KernelMsg(id, 0x43c41efd78, val);
+}
+
+pub fn PrintData1(id: u64) {
+    let val = unsafe {
+        *(0x43c41efd78 as * const u64)
+    };
+
+    if val != 0 {
+        Kernel::HostSpace::KernelMsg(id, 0x43c41efd78, val);
+    }
+}
+
 #[no_mangle]
 pub extern fn rust_main(heapStart: u64, heapLen: u64, id: u64, vdsoParamAddr: u64, vcpuCnt: u64, autoStart: bool) {
     if id == 0 {
+        Kernel::HostSpace::KernelMsg(1, 2, 3);
         ALLOCATOR.Add(heapStart as usize, heapLen as usize);
 
         {
@@ -379,7 +400,7 @@ pub extern fn rust_main(heapStart: u64, heapLen: u64, id: u64, vdsoParamAddr: u6
         }
 
         SHARESPACE.scheduler.SetVcpuCnt(vcpuCnt as usize);
-        HyperCall64(qlib::HYPERCALL_INIT, (&(*SHARESPACE) as *const ShareSpace) as u64, 0);
+        HyperCall64(qlib::HYPERCALL_INIT, (&(*SHARESPACE) as *const ShareSpace) as u64, 0, 0);
 
         {
             let root = CurrentCr3();
@@ -414,7 +435,7 @@ pub extern fn rust_main(heapStart: u64, heapLen: u64, id: u64, vdsoParamAddr: u6
     };
 
     if id == 1 {
-        error!("heap start is {:x}/{:x}", heapStart, heapStart + heapLen);
+        info!("heap start is {:x}/{:x}/{:x}", heapStart, heapStart + heapLen, &self::SHARESPACE.config.DebugLevel as * const _ as u64);
         if autoStart {
             CreateTask(StartRootContainer, ptr::null(), false);
         }
@@ -487,11 +508,14 @@ fn StartRootContainer(_para: *const u8) {
     };
 
 
+    info!("StartRootContainer .... 1");
     let (_tid, entry, userStackAddr, kernelStackAddr) = {
         let mut processArgs = LOADER.Lock(task).unwrap().Init(process);
+        info!("StartRootContainer ...2.");
         LOADER.LoadRootProcess(&mut processArgs).unwrap()
     };
 
+    info!("StartRootContainer ....3");
     //CreateTask(StartExecProcess, ptr::null());
     let currTask = Task::Current();
     currTask.AccountTaskEnter(SchedState::RunningApp);

@@ -1,10 +1,10 @@
-use libc;
-use core::ptr;
+//use libc;
+//use core::ptr;
 
-use super::qlib::mem::list_allocator::*;
+//use super::qlib::mem::list_allocator::*;
 use super::qlib::mutex::*;
 
-
+/*
 impl OOMHandler for ListAllocator {
     fn handleError(&self, _a:u64, _b:u64) {
         panic!("qvisor OOM: Heap allocator fails to allocate memory block");
@@ -27,7 +27,7 @@ impl ListAllocator {
             self.Add(address as usize, 1<<29 as usize);
         }
     }
-}
+}*/
 
 impl<T: ?Sized> QMutex<T> {
     pub fn Log(&self, a: u64, b: u64) {

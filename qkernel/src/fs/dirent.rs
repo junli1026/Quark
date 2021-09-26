@@ -276,6 +276,7 @@ impl Dirent {
     }
 
     fn walk(&self, task: &Task, root: &Dirent, name: &str) -> Result<Dirent> {
+        error!("Walk 1");
         let inode = self.Inode();
         if !inode.StableAttr().IsDir() {
             return Err(Error::SysError(SysErr::ENOTDIR))
@@ -294,6 +295,7 @@ impl Dirent {
             }
         }
 
+        error!("Walk 2");
         let remove = match (self.0).0.lock().Children.get(name) {
             Some(subD) => {
                 match subD.upgrade() {
@@ -320,28 +322,34 @@ impl Dirent {
             }
         };
 
+        error!("Walk 3");
         if remove {
             (self.0).0.lock().Children.remove(name);
         }
 
+        error!("Walk 3.1");
         let frozen = (self.0).0.lock().frozen;
         if frozen && !inode.IsVirtual() {
             return Err(Error::SysError(SysErr::ENOENT))
         }
 
+        error!("Walk 3.2");
         let c = inode.Lookup(task, name)?;
 
+        error!("Walk 4");
         assert!(&(c.0).0.lock().Name == name, "lookup get mismatch name");
 
         self.AddChild(&c);
 
+        error!("Walk 5");
         return Ok(c)
     }
 
     pub fn Walk(&self, task: &Task, root: &Dirent, name: &str) -> Result<Dirent> {
         let _a = RENAME.read();
 
-        return self.walk(task, root, name)
+        let ret = self.walk(task, root, name);
+        return ret;
     }
 
     pub fn AddChild(&self, child: &Arc<(QMutex<InterDirent>, u64)>) -> Option<Weak<(QMutex<InterDirent>, u64)>> {
@@ -555,21 +563,40 @@ impl Dirent {
     }
 
     pub fn Mount(&self, inode: &Inode) -> Result<Dirent> {
+        error!("Mountxx 1");
         if inode.lock().StableAttr().IsSymlink() {
             return Err(Error::SysError(SysErr::ENOENT))
         }
 
+        error!("Mountxx 2");
         let parent = self.Parent().unwrap();
         let parentInode = parent.Inode();
         if (parent.0).0.lock().frozen && !parentInode.IsVirtual() {
             return Err(Error::SysError(SysErr::ENOENT))
         }
 
-        let replacement = Arc::new((QMutex::new(InterDirent::New(inode.clone(), &(self.0).0.lock().Name)), UniqueID()));
+        error!("Mountxx 3 {:x}", super::super::asm::GetRsp());
+
+        let lock = (self.0).0.lock();
+        let slice = lock.Name.as_bytes();
+        error!("Mountxx 3.1 {:?}", slice);
+        let arr = slice.to_vec();
+        error!("Mountxx 3.2");
+
+        let name = unsafe {
+            String::from_utf8_unchecked(arr)
+        };
+        error!("Mountxx 3.2");
+        let interDirent = InterDirent::New(inode.clone(), name);
+
+        let replacement = Arc::new((QMutex::new(interDirent), UniqueID()));
+        error!("Mountxx 3.3");
         replacement.0.lock().mounted = true;
 
+        error!("Mountxx 4");
         parent.AddChild(&replacement);
 
+        error!("Mountxx 5");
         return Ok(Dirent(replacement))
     }
 
@@ -986,10 +1013,14 @@ impl Default for InterDirent {
 }
 
 impl InterDirent {
-    pub fn New(inode: Inode, name: &str) -> Self {
+    pub fn New(inode: Inode, name: String) -> Self {
+        error!("InterDirent::New 1 {} rsp {:x} addr {:x} top {:x}",
+            name, super::super::asm::GetRsp(), name.as_ptr() as u64, super::super::ALLOCATOR.Top(3));
+        //let name = name.to_string();
+        //error!("InterDirent::New 2");
         return Self {
-            Inode: inode.clone(),
-            Name: name.to_string(),
+            Inode: inode, //inode.clone(),
+            Name: name,
             Parent: None,
             Children: BTreeMap::new(),
             frozen: false,

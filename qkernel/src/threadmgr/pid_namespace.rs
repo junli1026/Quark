@@ -197,15 +197,19 @@ impl PIDNamespace {
 
     // ThreadGroups returns a snapshot of the thread groups in ns.
     pub fn ThreadGroups(&self) -> Vec<ThreadGroup> {
+        error!("ThreadGroups 1");
         let owner = self.lock().owner.clone();
+        error!("ThreadGroups 2");
         let _r = owner.ReadLock();
 
+        error!("ThreadGroups 2");
         let me = self.lock();
         let mut tgs = Vec::with_capacity(me.tgids.len());
         for (tg, _) in &me.tgids {
             tgs.push(tg.clone())
         }
 
+        error!("ThreadGroups 3");
         return tgs;
     }
 
