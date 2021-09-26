@@ -22,6 +22,8 @@ use super::asm::*;
 
 pub const SCALE : i64 = 2_000;
 pub const ERROR : DebugLevel = DebugLevel::Error;
+pub const INFO : DebugLevel = DebugLevel::Info;
+pub const DEBUG : DebugLevel = DebugLevel::Debug;
 
 lazy_static! {
     pub static ref DEBUG_LEVEL: DebugLevel = super::SHARESPACE.config.DebugLevel;
@@ -64,7 +66,11 @@ macro_rules! raw_print {
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => ({
-        if $crate::SHARESPACE.config.DebugLevel >= $crate::qlib::config::DebugLevel::Error {
+        let current = $crate::print::ERROR;
+        let level = *$crate::print::DEBUG_LEVEL;
+        let cmp = level >= current;
+
+        if cmp {
             //$crate::qlib::perf_tunning::PerfGoto($crate::qlib::perf_tunning::PerfType::Print);
             let prefix = $crate::print::PrintPrefix();
             let s = &format!($($arg)*);
@@ -129,7 +135,11 @@ macro_rules! error {
 #[macro_export]
 macro_rules! info {
     ($($arg:tt)*) => ({
-        if $crate::SHARESPACE.config.DebugLevel >= $crate::qlib::config::DebugLevel::Info {
+        let current = $crate::print::INFO;
+        let level = *$crate::print::DEBUG_LEVEL;
+        let cmp = level >= current;
+
+        if cmp  {
             //$crate::qlib::perf_tunning::PerfGoto($crate::qlib::perf_tunning::PerfType::Print);
             let prefix = $crate::print::PrintPrefix();
             let s = &format!($($arg)*);
@@ -149,7 +159,11 @@ macro_rules! info {
 #[macro_export]
 macro_rules! debug {
     ($($arg:tt)*) => ({
-        if $crate::SHARESPACE.config.DebugLevel >= $crate::qlib::config::DebugLevel::Debug {
+        let current = $crate::print::DEBUG;
+        let level = *$crate::print::DEBUG_LEVEL;
+        let cmp = level >= current;
+
+        if cmp {
             //$crate::qlib::perf_tunning::PerfGoto($crate::qlib::perf_tunning::PerfType::Print);
             let prefix = $crate::print::PrintPrefix();
             let s = &format!($($arg)*);
