@@ -39,7 +39,7 @@ impl<const ORDER: usize> Heap<ORDER> {
 
     /// Add a range of memory [start, end) to the heap
     pub unsafe fn add_to_heap(&mut self, mut start: usize, mut end: usize) {
-        self.Log(0x333, start as u64, end as u64);
+        //self.Log(0x333, start as u64, end as u64);
 
         // avoid unaligned access on some platforms
         start = (start + size_of::<usize>() - 1) & (!size_of::<usize>() + 1);
@@ -84,8 +84,8 @@ impl<const ORDER: usize> Heap<ORDER> {
                             self.free_list[j - 1]
                                 .push((block as usize + (1 << (j - 1))) as *mut usize);
                             self.free_list[j - 1].push(block);
-                            self.Log(0x888, 1 << (j - 1), block as u64);
-                            self.Log(0x888, 1 << (j - 1), block as u64 + (1 << (j - 1)));
+                           // self.Log(0x888, 1 << (j - 1), block as u64);
+                            //self.Log(0x888, 1 << (j - 1), block as u64 + (1 << (j - 1)));
                         }
                     } else {
                         return Err(());
@@ -101,9 +101,9 @@ impl<const ORDER: usize> Heap<ORDER> {
                 if let Some(result) = result {
                     self.user += layout.size();
                     self.allocated += size;
-                    self.Log(0x666, size as u64, result.as_ptr() as u64);
-                    self.Log(0x998, 8, self.free_list[3].top());
-                    self.Log(0x999, 8, self.free_list[3].next());
+                    //self.Log(0x666, size as u64, result.as_ptr() as u64);
+                    //self.Log(0x998, 8, self.free_list[3].top());
+                    //self.Log(0x999, 8, self.free_list[3].next());
                     return Ok(result);
                 } else {
                     return Err(());

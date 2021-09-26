@@ -265,9 +265,7 @@ pub fn ReadAll(task: &mut Task, file: &File, data: &mut [u8], offset: u64) -> Re
             len: data.len(),
         }];
 
-        error!("ReadAll 1");
         let l = file.Preadv(task, &mut iovecs, offset as i64)? as usize;
-        error!("ReadAll 2");
         cnt += l;
 
         if l == data.len() || l == 0 {

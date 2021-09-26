@@ -716,17 +716,12 @@ impl InodeOperations for HostInodeOp {
     }
 
     fn Lookup(&self, _task: &Task, dir: &Inode, name: &str) -> Result<Dirent> {
-        super::super::super::PrintData(0x222);
-        error!("hostlookup 1");
         let (fd, writeable, fstat) = TryOpenAt(self.HostFd(), name)?;
-        //super::super::super::PrintData();
 
-        error!("hostlookup 2");
         let ms = dir.lock().MountSource.clone();
         let inode = Inode::NewHostInode(&ms, fd, &fstat, writeable)?;
 
         let ret = Ok(Dirent::New(&inode, name));
-        error!("hostlookup 3");
         return ret;
     }
 
@@ -888,7 +883,6 @@ impl InodeOperations for HostInodeOp {
     }
 
     fn Check(&self, task: &Task, inode: &Inode, reqPerms: &PermMask) -> Result<bool> {
-        error!("Check ...");
         return ContextCanAccessFile(task, inode, reqPerms)
     }
 

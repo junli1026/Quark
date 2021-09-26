@@ -186,16 +186,12 @@ impl Loader {
         let task = Task::Current();
         task.creds = procArgs.Credentials.clone();
         let kernel = self.Lock(task)?.kernel.clone();
-        error!("LoadRootProcess 1");
         let (tg, tid) = kernel.CreateProcess(procArgs)?;
         let paths = GetPath(&procArgs.Envv);
-        error!("LoadRootProcess 2");
         procArgs.Filename = task.mountNS.ResolveExecutablePath(task, &procArgs.WorkingDirectory, &procArgs.Filename, &paths)?;
 
-        error!("LoadRootProcess 3");
         let mut ttyFileOps = None;
         if procArgs.Terminal {
-            error!("LoadRootProcess 4");
             let file = task.NewFileFromHostFd(0, procArgs.Stdiofds[0], true)
                 .expect("Task: create std fds");
             file.flags.lock().0.NonBlocking = false; //need to clean the stdio nonblocking
@@ -211,7 +207,6 @@ impl Loader {
         } else {
             task.NewStdFds(&procArgs.Stdiofds[..], false).expect("Task: create std fds");
         }
-        error!("LoadRootProcess 5");
 
         GetKernel().Start()?;
 
@@ -226,9 +221,7 @@ impl Loader {
         //for the root container, the tid is always 0,
         self.Lock(task)?.processes.insert(0, execProc);
 
-        error!("LoadRootProcess 6");
         let (entry, userStackAddr, kernelStackAddr) = kernel.LoadProcess(&procArgs.Filename, &procArgs.Envv, &mut procArgs.Argv)?;
-        error!("LoadRootProcess 7");
         return Ok((tid, entry, userStackAddr, kernelStackAddr))
     }
 
@@ -320,10 +313,8 @@ impl LoaderInternal {
     }
 
     pub fn SignalForegroundProcessGroup(&self, tgid: ThreadID, signo: i32) -> Result<()> {
-        error!("SignalForegroundProcessGroup( 1");
         let (tg, tty) = match self.ThreadGroupFromID(tgid) {
             None => {
-                info!("SignalForegroundProcessGroup: no thread group found for {}", tgid);
                 let err = Err(Error::Common(format!("no thread group found for {}", tgid)));
                 return err
             }
@@ -334,37 +325,29 @@ impl LoaderInternal {
             Some(t) => t,
         };
 
-        error!("SignalForegroundProcessGroup( 2");
         let pg = tty.ForegroundProcessGroup();
         if pg.is_none() {
             // No foreground process group has been set. Signal the
             // original thread group.
-            info!("No foreground process group PID {}. Sending signal directly to PID {}.",
-                tgid, tgid);
             return tg.SendSignal(&SignalInfo{
                 Signo: signo,
                 ..Default::default()
             })
         }
 
-        error!("SignalForegroundProcessGroup( 3");
         // Send the signal to all processes in the process group.
         let kernel = self.kernel.clone();
         kernel.extMu.lock();
         let root = kernel.tasks.read().root.as_ref().unwrap().clone();
 
-        error!("SignalForegroundProcessGroup( 3.1");
         let mut lastErr = Ok(());
 
-        error!("SignalForegroundProcessGroup( 4");
         let tgs = root.ThreadGroups();
-        error!("SignalForegroundProcessGroup( 5");
         for tg in &tgs {
             if tg.ProcessGroup() != pg {
                 continue
             }
 
-            error!("SignalForegroundProcessGroup( 6");
             match tg.SendSignal(&SignalInfo{
                 Signo: signo,
                 ..Default::default()
@@ -373,9 +356,6 @@ impl LoaderInternal {
                 Ok(()) => (),
             }
         }
-
-        error!("SignalForegroundProcessGroup( 7");
-
 
         return lastErr
     }

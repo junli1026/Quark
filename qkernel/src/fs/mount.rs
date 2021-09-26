@@ -272,7 +272,6 @@ impl MountNs {
             return Err(Error::SysError(SysErr::ENOENT))
         }
 
-        error!("FindLink 1");
         let (mut first, mut remain) = SplitFirst(path);
 
         let mut current = match wd {
@@ -291,66 +290,46 @@ impl MountNs {
             remain = tremain;
         }
 
-        error!("FindLink 2 {}",  path);
         loop {
-            error!("FindLink 2.1");
             let currentIode = current.Inode();
-            error!("FindLink 2.1.0 {:?}", currentIode.InodeType());
             if !Arc::ptr_eq(&current, root) {
-                error!("FindLink 2.1.1 rsp {:x}", super::super::asm::GetRsp());
                 let sattr = currentIode.StableAttr();
-                error!("FindLink 2.1.2 rsp {:x}", super::super::asm::GetRsp());
                 let isdir = sattr.IsDir();
-                error!("FindLink 2.1.3 rsp {:x}/isdir {}", super::super::asm::GetRsp(), isdir);
 
                 if !isdir {
-                    error!("FindLink 2.2");
                     return Err(Error::SysError(SysErr::ENOTDIR))
                 }
 
-                error!("FindLink 2.3");
                 currentIode.CheckPermission(task, &PermMask {
                     execute: true,
                     ..Default::default()
                 })?
             }
 
-            error!("FindLink 3 first {}", first);
             let next = match current.Walk(task, root, first) {
                 Err(e) => {
-                    error!("FindLink 3.1");
                     current.ExtendReference();
-                    error!("FindLink 3.2");
                     return Err(e);
                 }
                 Ok(n) => n,
             };
 
-            error!("FindLink 4 remain {}", remain);
             if remain != "" {
                 current = self.resolve(task, root, &next, remainingTraversals)?;
             } else {
-                error!("FindLink 4.0");
                 next.ExtendReference();
-                error!("FindLink 4.1");
                 return Ok(next)
             }
 
-            error!("FindLink 5");
             let (tfirst, tremain) = SplitFirst(remain);
             first = tfirst;
             remain = tremain;
-            error!("FindLink 6");
-
         }
     }
 
     pub fn FindInode(&self, task: &Task, root: &Dirent, wd: Option<Dirent>, path: &str, remainingTraversals: &mut u32) -> Result<Dirent> {
-        error!("FindInode 1 {}", path);
         let d = self.FindLink(task, root, wd, path, remainingTraversals)?;
-        error!("FindInode 2 {}", path);
         let ret = self.resolve(task, root, &d, remainingTraversals);
-        error!("FindInode 3 {}", path);
         return ret;
     }
 

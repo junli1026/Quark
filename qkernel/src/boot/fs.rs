@@ -250,31 +250,23 @@ fn MountSubmounts(task: &Task, config: &config::Config, mns: &MountNs, root: &Di
 fn MountSubmount(task: &Task, config: &config::Config, mns: &MountNs, root: &Dirent, m: &oci::Mount, mounts: &Vec<oci::Mount>) -> Result<()> {
     let (fsName, opts) = GetMountNameAndOptions(config, m)?;
 
-    error!("MountSubmount 1");
     if fsName.as_str() == "" {
         return Ok(())
     }
 
-
     let filesystem = MustFindFilesystem(&fsName);
     let mf = mountFlags(&m.options);
 
-    error!("MountSubmount 2");
     let mut inode = filesystem.lock().Mount(task, &"none".to_string(), &mf, &opts.join(","))?;
     let submounts = SubTargets(&m.destination, mounts);
     if submounts.len() > 0 {
-        info!("adding submount overlay over {}", m.destination);
         inode = AddSubmountOverlay(task, &inode, &submounts)?;
     }
 
-    error!("MountSubmount 3");
-
     let mut maxTraversals = 0;
     let dirent = mns.FindInode(task, root, Some(root.clone()), &m.destination, &mut maxTraversals)?;
-    error!("MountSubmount 4");
     mns.Mount(&dirent, &inode)?;
 
-    info!("Mounted {} to {} type {}", m.source, m.destination, m.typ);
     return Ok(())
 }
 

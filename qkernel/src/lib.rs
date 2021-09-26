@@ -508,14 +508,11 @@ fn StartRootContainer(_para: *const u8) {
     };
 
 
-    info!("StartRootContainer .... 1");
     let (_tid, entry, userStackAddr, kernelStackAddr) = {
         let mut processArgs = LOADER.Lock(task).unwrap().Init(process);
-        info!("StartRootContainer ...2.");
         LOADER.LoadRootProcess(&mut processArgs).unwrap()
     };
 
-    info!("StartRootContainer ....3");
     //CreateTask(StartExecProcess, ptr::null());
     let currTask = Task::Current();
     currTask.AccountTaskEnter(SchedState::RunningApp);

@@ -30,7 +30,7 @@ lazy_static! {
 }
 
 pub fn PrintPrefix() -> String {
-    super::PrintData1(0x8888);
+    //super::PrintData1(0x8888);
     let now = if super::SHARESPACE.config.PerfDebug {
         Rdtsc()/SCALE
     } else {
@@ -45,7 +45,7 @@ pub fn PrintPrefix() -> String {
 pub fn DebugLevel() -> DebugLevel {
     //super::PrintData1(0x8884);
     let level = super::SHARESPACE.config.DebugLevel;
-    super::PrintData1(0x8885);
+    //super::PrintData1(0x8885);
     return level;
 }
 
@@ -85,7 +85,7 @@ macro_rules! print {
 #[macro_export]
 macro_rules! error {
     ($($arg:tt)*) => ({
-        $crate::PrintData(0x8889);
+        //$crate::PrintData(0x8889);
 
         // the repro will change the value of the address 0x43c41efd78 from 0 to 40000ba879
         // the log repro piece will be as below
@@ -110,12 +110,12 @@ macro_rules! error {
             cmp = $crate::SHARESPACE.config.DebugLevel >= $crate::qlib::config::DebugLevel::Error;
         }
 
-        $crate::PrintData(0x8886);
+        //$crate::PrintData(0x8886);
 
         if cmp {
         //if $crate::SHARESPACE.config.DebugLevel >= $crate::qlib::config::DebugLevel::Error {
             //$crate::qlib::perf_tunning::PerfGoto($crate::qlib::perf_tunning::PerfType::Print);
-            $crate::PrintData1(0x8887);
+            //$crate::PrintData1(0x8887);
             let prefix = $crate::print::PrintPrefix();
             let s = &format!($($arg)*);
 

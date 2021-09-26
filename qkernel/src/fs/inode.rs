@@ -42,12 +42,9 @@ use super::inode_overlay::*;
 use super::lock::*;
 
 pub fn ContextCanAccessFile(task: &Task, inode: &Inode, reqPerms: &PermMask) -> Result<bool> {
-    error!("ContextCanAccessFile 1");
     let creds = task.creds.clone();
-    error!("ContextCanAccessFile 2");
     let uattr = inode.UnstableAttr(task)?;
 
-    info!("ContextCanAccessFile 1, perms is {:?}", &uattr.Perms);
     let mut p = &uattr.Perms.Other;
     {
         let creds = creds.lock();
@@ -58,17 +55,14 @@ pub fn ContextCanAccessFile(task: &Task, inode: &Inode, reqPerms: &PermMask) -> 
         }
     }
 
-    info!("ContextCanAccessFile 2");
     if inode.StableAttr().IsFile() && reqPerms.execute && inode.lock().MountSource.lock().Flags.NoExec {
         return Ok(false);
     }
 
-    info!("ContextCanAccessFile 3, p is {:?}, reqPerms is {:?}", &p, reqPerms);
     if p.SupersetOf(reqPerms) {
         return Ok(true);
     }
 
-    info!("ContextCanAccessFile 4");
     if inode.StableAttr().IsDir() {
         if CheckCapability(&creds, Capability::CAP_DAC_OVERRIDE, &uattr) {
             return Ok(true)
@@ -228,23 +222,15 @@ impl Inode {
     }
 
     pub fn Lookup(&self, task: &Task, name: &str) -> Result<Dirent> {
-        error!("Lookup 1");
         let isOverlay = self.lock().Overlay.is_some();
-        error!("Lookup 2 {}", isOverlay);
         if isOverlay {
             let overlay = self.lock().Overlay.as_ref().unwrap().clone();
             let (dirent, _) = overlayLookup(task, &overlay, self, name)?;
             return Ok(dirent)
         }
 
-        error!("Lookup 3 rsp is {:x}", super::super::asm::GetRsp());
         let iops = self.lock().InodeOp.clone();
-        error!("Lookup 4 name {}/{:?}", name, iops.IopsType());
-        super::super::PrintData(0x221);
-        //error!("Lookup 5.1");
-        //super::super::PrintData(0x222);
         let res = iops.Lookup(task, self, name);
-        error!("Lookup 5");
         return res;
     }
 
@@ -387,17 +373,14 @@ impl Inode {
     }
 
     pub fn UnstableAttr(&self, task: &Task) -> Result<UnstableAttr> {
-        error!("UnstableAttr 1 {:x}", super::super::asm::GetRsp());
         let isOverlay = self.lock().Overlay.is_some();
         if isOverlay {
             let overlay = self.lock().Overlay.as_ref().unwrap().clone();
             return overlayUnstableAttr(task, &overlay);
         }
 
-        error!("UnstableAttr 2 {:x}", super::super::asm::GetRsp());
         let op = self.lock().InodeOp.clone();
         let res = op.UnstableAttr(task, self);
-        error!("UnstableAttr 3 {:x}", super::super::asm::GetRsp());
         return res;
     }
 
@@ -556,13 +539,11 @@ impl Inode {
     }
 
     pub fn CheckPermission(&self, task: &Task, p: &PermMask) -> Result<()> {
-        error!("CheckPermission 1");
         if p.write && self.lock().MountSource.lock().Flags.ReadOnly {
             return Err(Error::SysError(SysErr::EROFS))
         }
 
         let isOverlay = self.lock().Overlay.is_some();
-        error!("CheckPermission 2 {}", isOverlay);
         if isOverlay {
             let mountSource = self.lock().MountSource.clone();
             if p.write && overlayUpperMountSource(&mountSource).lock().Flags.ReadOnly {
@@ -570,26 +551,21 @@ impl Inode {
             }
         }
 
-        error!("CheckPermission 3 {}", isOverlay);
         return self.check(task, p);
     }
 
     pub fn check(&self, task: &Task, p: &PermMask) -> Result<()> {
-        error!("check 1");
         let isOverlay = self.lock().Overlay.is_some();
         if isOverlay {
             let overlay = self.lock().Overlay.as_ref().unwrap().clone();
             return overlayCheck(task, &overlay, p);
         }
 
-        error!("check 2");
         let op = self.lock().InodeOp.clone();
-        error!("check 3");
         if !op.Check(task, self, p)? {
             return Err(Error::SysError(SysErr::EACCES))
         }
 
-        error!("check 4");
         return Ok(())
     }
 
